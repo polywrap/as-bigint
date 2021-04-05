@@ -40,4 +40,4 @@ jobs:
         run: yarn build
 
       - name: Test
-        run: yarn __tests__:ci
+        run: yarn test:ci
