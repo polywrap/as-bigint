@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/web3-api/BigInt.git"
   },
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
     "clean": "rimraf ./node_modules ./build ./**/coverage",
