@@ -28,7 +28,6 @@
     "lint": "yarn eslint",
     "lint:fix": "yarn eslint --fix",
     "lint:ci": "yarn eslint",
-    "publish": "npm publish . --access public"
   },
   "devDependencies": {
     "@as-pect/cli": "5.0.1",
