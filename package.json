@@ -16,9 +16,9 @@
     "build:optimized": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
     "test": "asp --verbose",
     "test:ci": "asp --summary",
-    "lint": "yarn lint",
-    "lint:fix": "yarn lint -- --fix",
-    "lint:ci": "yarn lint --parallel"
+    "lint": "yarn eslint",
+    "lint:fix": "yarn eslint --fix",
+    "lint:ci": "yarn eslint"
   },
   "devDependencies": {
     "assemblyscript": "0.17.14",
