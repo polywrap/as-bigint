@@ -27,7 +27,7 @@
     "test:ci": "asp --summary",
     "lint": "yarn eslint",
     "lint:fix": "yarn eslint --fix",
-    "lint:ci": "yarn eslint",
+    "lint:ci": "yarn eslint"
   },
   "devDependencies": {
     "@as-pect/cli": "5.0.1",
