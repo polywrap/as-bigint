@@ -8,6 +8,15 @@
     "url": "https://github.com/web3-api/BigInt.git"
   },
   "version": "0.1.0",
+  "types": "assembly/index.ts",
+  "releaseFiles": [
+    "assembly/",
+    "build/",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "yarn.lock"
+  ],
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
     "clean": "rimraf ./node_modules ./build ./**/coverage",
@@ -18,7 +27,8 @@
     "test:ci": "asp --summary",
     "lint": "yarn eslint",
     "lint:fix": "yarn eslint --fix",
-    "lint:ci": "yarn eslint"
+    "lint:ci": "yarn eslint",
+    "publish": "npm publish . --access public"
   },
   "devDependencies": {
     "@as-pect/cli": "5.0.1",
@@ -34,8 +44,5 @@
     "eslint-plugin-prettier": "3.3.0",
     "prettier": "2.2.1",
     "rimraf": "3.0.2"
-  },
-  "dependencies": {
-    "@assemblyscript/loader": "0.17.14"
   }
 }
