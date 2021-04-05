@@ -2,11 +2,11 @@ module.exports = {
   /**
    * A set of globs passed to the glob package that qualify typescript files for testing.
    */
-  include: ["src/__tests__/**/*.spec.ts"],
+  include: ["src/test/**/*.spec.ts"],
   /**
    * A set of globs passed to the glob package that qualify files to be added to each test.
    */
-  add: ["src/__tests__/**/*.include.ts"],
+  add: ["src/test/**/*.include.ts"],
   /**
    * All the compiler flags needed for this test suite. Make sure that a binary file is output.
    */
@@ -29,11 +29,7 @@ module.exports = {
    * Add your required AssemblyScript imports here.
    */
   imports: {
-    // w3: {
-    //   __w3_invoke_args: () => { },
-    //   __w3_invoke_result: () => { },
-    //   __w3_invoke_error: () => { }
-    // }
+
   },
   /**
    * All performance statistics reporting can be configured here.

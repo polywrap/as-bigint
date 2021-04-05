@@ -1,39 +1,35 @@
 {
-  "name": "uniswapV2-api-assemblyscript",
-  "description": "UniswapV2 Web3API",
+  "name": "root",
+  "description": "AssemblyScript package for math with arbitrarily large integers",
+  "license": "MIT",
   "private": true,
-  "version": "0.0.1-prealpha.8",
-  "scripts": {
-    "build": "npx w3 build",
-    "build:as": "asc ./src/utils/BigInt.ts -o ./build/utils/BigInt.wasm -d ./build/utils/BigInt.d.ts",
-    "test:as": "asp --verbose",
-    "test:ci": "asp --summary",
-    "test:env:up": "npx w3 test-env up",
-    "test:env:down": "npx w3 test-env down"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/web3-api/BigInt.git"
   },
-  "workspaces": {
-    "nohoist": [
-      "assemblyscript",
-      "assemblyscript/**"
-    ]
+  "version": "0.0.1-prealpha",
+  "scripts": {
+    "reset": "yarn clean && yarn && yarn build",
+    "clean": "rimraf ./node_modules ./build ./**/coverage",
+    "build": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts",
+    "test": "asp --verbose",
+    "test:ci": "asp --summary",
+    "lint": "yarn lint",
+    "lint:fix": "yarn lint -- --fix",
+    "lint:ci": "yarn lint --parallel"
   },
   "devDependencies": {
-    "@as-pect/cli": "5.0.1",
-    "@uniswap/v2-core": "1.0.1",
-    "@uniswap/v2-periphery": "1.1.0-beta.0",
-    "@web3api/cli": "0.0.1-prealpha.11",
-    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.11",
-    "@web3api/wasm-as": "0.0.1-prealpha.11",
-    "@web3api/client-js": "0.0.1-prealpha.11",
     "assemblyscript": "0.17.14",
-    "ethers": "5.0.8",
-    "js-yaml": "3.14.0",
+    "@as-pect/cli": "5.0.1",
     "@types/jest": "26.0.8",
-    "@types/node": "12.6.9",
-    "@web3api/test-env-js": "0.0.1-prealpha.11",
-    "jest": "26.6.3",
+    "@web3api/wasm-as": "0.0.1-prealpha.11",
     "rimraf": "3.0.2",
-    "ts-jest": "26.5.4",
-    "typescript": "4.0.7"
+    "@typescript-eslint/eslint-plugin": "4.11.1",
+    "@typescript-eslint/parser": "4.11.1",
+    "eslint": "7.16.0",
+    "eslint-config-prettier": "7.1.0",
+    "eslint-plugin-import": "2.22.1",
+    "eslint-plugin-prettier": "3.3.0",
+    "prettier": "2.2.1"
   }
 }

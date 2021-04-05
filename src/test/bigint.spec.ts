@@ -1,5 +1,4 @@
-import { BigInt } from "../utils/BigInt";
-import { method } from "../../../../test-cases/cases/apis/large-types/query";
+import { BigInt } from "../BigInt";
 
 describe("BigInt: Sanity", () => {
 

@@ -1,4 +1,3 @@
-// based on https://cp-algorithms.com/algebra/big-integer.html
 
 export class BigInt {
   public static ZERO: BigInt = BigInt.fromDigits([0]);
@@ -161,7 +160,6 @@ export class BigInt {
   }
 
   // using binary search -> ~O(logZ*N^2) where Z is the magnitude of the numerator
-  // idea pulled from https://github.com/achyutb6/big-integer-arithmetic/blob/master/src/aab180004/Num.java
   @operator("/")
   div(other: BigInt): BigInt {
     if (other.eq(BigInt.ZERO)) throw new RangeError("Divide by zero");
