@@ -2,13 +2,13 @@ module.exports = {
   /**
    * A set of globs passed to the glob package that qualify typescript files for testing.
    */
-  include: ["src/test/**/*.spec.ts"],
+  include: ["assembly/__tests__/**/*.spec.ts"],
   /**
-   * A set of globs passed to the glob package that qualify files to be added to each test.
+   * A set of globs passed to the glob package that qualify files to be added to each __tests__.
    */
-  add: ["src/test/**/*.include.ts"],
+  add: ["assembly/__tests__/**/*.include.ts"],
   /**
-   * All the compiler flags needed for this test suite. Make sure that a binary file is output.
+   * All the compiler flags needed for this __tests__ suite. Make sure that a binary file is output.
    */
   flags: {
     // "--debug": [],
@@ -37,9 +37,9 @@ module.exports = {
   performance: {
     /** Enable performance statistics gathering. */
     enabled: true,
-    /** Set the maximum number of samples to run for each test. */
+    /** Set the maximum number of samples to run for each __tests__. */
     maxSamples: 10000,
-    /** Set the maximum test run time in milliseconds. */
+    /** Set the maximum __tests__ run time in milliseconds. */
     maxTestRunTime: 2000,
     /** Set the number of decimal places to round to. */
     roundDecimalPlaces: 3,

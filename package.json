@@ -7,18 +7,21 @@
     "type": "git",
     "url": "https://github.com/web3-api/BigInt.git"
   },
-  "version": "0.0.1-prealpha",
+  "version": "0.0.1",
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
     "clean": "rimraf ./node_modules ./build ./**/coverage",
     "build": "yarn build:optimized",
-    "build:untouched": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target debug",
-    "build:optimized": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
+    "build:untouched": "asc assembly/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target debug",
+    "build:optimized": "asc assembly/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
     "test": "asp --verbose",
     "test:ci": "asp --summary",
     "lint": "yarn eslint",
     "lint:fix": "yarn eslint --fix",
-    "lint:ci": "yarn eslint"
+    "lint:ci": "yarn eslint",
+    "asbuild:untouched": "asc assembly/index.ts --target debug",
+    "asbuild:optimized": "asc assembly/index.ts --target release",
+    "asbuild": "yarn asbuild:untouched && yarn asbuild:optimized"
   },
   "devDependencies": {
     "assemblyscript": "0.17.14",
@@ -33,5 +36,8 @@
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-prettier": "3.3.0",
     "prettier": "2.2.1"
+  },
+  "dependencies": {
+    "@assemblyscript/loader": "0.17.14"
   }
 }

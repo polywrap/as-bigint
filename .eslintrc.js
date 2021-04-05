@@ -5,7 +5,7 @@ module.exports = {
     node: true,
     mocha: true
   },
-  ignorePatterns: ["**/test/**/*.*"],
+  ignorePatterns: ["**/__tests__/**/*.*"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "es2019",
@@ -62,7 +62,7 @@ module.exports = {
   },
   "overrides": [
     {
-      "files": ["**/test/**/*.ts", "*.spec.ts"],
+      "files": ["**/__tests__/**/*.ts", "*.spec.ts"],
       "rules": {
         "import/no-extraneous-dependencies": "off"
       }
