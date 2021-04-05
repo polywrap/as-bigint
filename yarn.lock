@@ -52,11 +52,6 @@
     diff "^5.0.0"
     nearley "^2.20.1"
 
-"@assemblyscript/loader@0.17.14":
-  version "0.17.14"
-  resolved "https://registry.yarnpkg.com/@assemblyscript/loader/-/loader-0.17.14.tgz#43bfe793c787180c5eb0a57ada8318fb62171b4e"
-  integrity sha512-+PVTOfla/0XMLRTQLJFPg4u40XcdTfon6GGea70hBGi8Pd7ZymIXyVUR+vK8wt5Jb4MVKTKPIz43Myyebw5mZA==
-
 "@babel/code-frame@^7.0.0":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.13.tgz#dcfc826beef65e75c50e21d3837d7d95798dd658"
@@ -244,11 +239,6 @@
   dependencies:
     "@typescript-eslint/types" "4.11.1"
     eslint-visitor-keys "^2.0.0"
-
-"@web3api/wasm-as@0.0.1-prealpha.11":
-  version "0.0.1-prealpha.11"
-  resolved "https://registry.yarnpkg.com/@web3api/wasm-as/-/wasm-as-0.0.1-prealpha.11.tgz#761f032461b0893a58e14fed6d831521c825332f"
-  integrity sha512-B/UmUmutFetOPQQBa96O9eSPcGEt4PezhN6xFyBTmGKGpRUyQe+AGxcfT16CZ7HFk7B/0NmxLz/PeR3PBDYVEQ==
 
 acorn-jsx@^5.3.1:
   version "5.3.1"
