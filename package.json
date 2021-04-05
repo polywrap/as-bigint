@@ -11,7 +11,9 @@
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
     "clean": "rimraf ./node_modules ./build ./**/coverage",
-    "build": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts",
+    "build": "yarn build:optimized",
+    "build:untouched": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target debug",
+    "build:optimized": "asc ./src/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
     "test": "asp --verbose",
     "test:ci": "asp --summary",
     "lint": "yarn lint",
