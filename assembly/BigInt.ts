@@ -109,7 +109,7 @@ export class BigInt {
     } else if (this.isNegative && !other.isNegative) {
       return this.add(other.opposite());
     }
-    const cmp: i8 = this.compareTo(other);
+    const cmp: i32 = this.compareTo(other);
     if (cmp < 0) {
       return other.sub(this).opposite();
     } else if (cmp == 0) {
@@ -176,7 +176,7 @@ export class BigInt {
     // search
     while (lo.lte(hi)) {
       const mid: BigInt = hi.sub(lo).divInt(2).add(lo);
-      const cmp: i8 = this.compareTo(other.mul(mid));
+      const cmp: i32 = this.compareTo(other.mul(mid));
       if (cmp < 0) hi = mid.sub(BigInt.ONE);
       else if (cmp > 0) lo = mid.add(BigInt.ONE);
       else return mid;
@@ -303,7 +303,7 @@ export class BigInt {
     return left.gte(right);
   }
 
-  compareTo(other: BigInt): i8 {
+  compareTo(other: BigInt): i32 {
     // opposite signs
     if (this.isNegative && !other.isNegative) return -1;
     if (!this.isNegative && other.isNegative) return 1;
