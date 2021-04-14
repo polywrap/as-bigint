@@ -139,6 +139,7 @@ export class BigInt {
   // Although it is O(N^2), it is faster in practice than asymptotically better algorithms for multiplicands of <= 256 bits
   @operator("*")
   mul(other: BigInt): BigInt {
+    // if (other._d.length == 1) return this.mulInt(other._d[0]);
     const res: u32[] = new Array<u32>(this._d.length + other._d.length);
     for (let i = 0; i < this._d.length; i++) {
       let carry: u32 = 0;
@@ -217,6 +218,7 @@ export class BigInt {
   // Babylonian method (as used in Uniswap contracts)
   // eslint-disable-next-line @typescript-eslint/member-ordering
   sqrt(): BigInt {
+    if (this.isNegative) throw new  RangeError("Square root of negative numbers is not supported");
     const one = BigInt.ONE;
     const three = BigInt.fromDigits([3]);
     let z: BigInt = BigInt.ZERO;
@@ -309,15 +311,17 @@ export class BigInt {
     if (!this.isNegative && other.isNegative) return 1;
     // different number of "digits"
     if (this._d.length != other._d.length) {
-      if (this._d.length > other._d.length && !this.isNegative) return 1;
-      else if (other._d.length > this._d.length && !this.isNegative) return -1;
-      else if (this._d.length > other._d.length && this.isNegative) return -1;
-      else return 1;
+      if (this._d.length > other._d.length)
+        return this.isNegative ? -1 : 1;
+      if (this._d.length < other._d.length)
+        return this.isNegative ? 1 : -1;
     }
     // numbers are same length, so check each "digit"
     for (let i = this._d.length - 1; i >= 0; i--) {
-      if (this._d[i] < other._d[i]) return -1;
-      if (this._d[i] > other._d[i]) return 1;
+      if (this._d[i] < other._d[i])
+        return this.isNegative ? 1 : -1;
+      if (this._d[i] > other._d[i])
+        return this.isNegative ? -1 : 1;
     }
     return 0;
   }
