@@ -1,4 +1,5 @@
 import {BigInt} from "../BigInt";
+import {testCases} from "./TestCase";
 
 describe("Algebraic operations", () => {
 
@@ -15,14 +16,61 @@ describe("Algebraic operations", () => {
 
     const biD = BigInt.fromString("9684501981285124231672521053664615343720375041608711602989505225");
     expect(biD.sqrt().toString()).toStrictEqual("98409867296349527348967348435235");
+  });
 
+  it("throws on square root of negative number", () => {
     // try sqrt negative number
     const badSqrt = (): void => {
       const biE = BigInt.fromString("-9684501981285124231672521053664615343720375041608711602989505225");
       const shouldThrow = biE.sqrt();
-      return;
     }
     expect(badSqrt).toThrow("Square root of negative numbers is not supported");
+  });
+
+  it("exponentiates", () => {
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const actual = x.pow(3);
+      const expected = testCase.xCube;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
+  });
+
+  it("squares then square roots", () => {
+    // square then square root
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const actualSquare = x.pow(2);
+      const expectedSquare = testCase.xSquare;
+      expect(actualSquare.toString()).toStrictEqual(expectedSquare);
+      const actualRoot = actualSquare.sqrt();
+      // convert to and from BigInt to clear leading zeros in one of the test cases
+      let expectedRoot = BigInt.fromString(testCase.x).toString();
+      if (expectedRoot.charAt(0) == "-") {
+        expectedRoot = expectedRoot.substring(1);
+      }
+      expect(actualRoot.toString()).toStrictEqual(expectedRoot);
+    }
+  });
+
+  it("y^4 then square root x2", () => {
+    // square then square root
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const y = BigInt.fromString(testCase.y);
+      const actualQuad = y.pow(4);
+      const expectedQuad= testCase.yQuad;
+      expect(actualQuad.toString()).toStrictEqual(expectedQuad);
+      const actualRoot = actualQuad.sqrt().sqrt();
+      // convert to and from BigInt to clear leading zeros in one of the test cases
+      let expectedRoot = BigInt.fromString(testCase.y).toString();
+      if (expectedRoot.charAt(0) == "-") {
+        expectedRoot = expectedRoot.substring(1);
+      }
+      expect(actualRoot.toString()).toStrictEqual(expectedRoot);
+    }
   });
 
 });

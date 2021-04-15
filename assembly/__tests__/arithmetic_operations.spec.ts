@@ -1,6 +1,7 @@
 import { BigInt } from "../BigInt";
+import {testCases} from "./TestCase";
 
-describe("BigInt: Sanity", () => {
+describe("BigInt: Arithmetic", () => {
 
   it("Addition", () => {
     // small integer addition
@@ -38,6 +39,15 @@ describe("BigInt: Sanity", () => {
     const biZ = BigInt.fromString(intZ);
     expect(biY.add(biZ).toString()).toStrictEqual("840839472643347287071870854974826105719891207760487");
 
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.add(y);
+      const expected = testCase.sum;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
@@ -82,6 +92,15 @@ describe("BigInt: Sanity", () => {
     const biZ = BigInt.fromString(intZ);
     expect(biY.sub(biZ).toString()).toStrictEqual("840839472643347286875051120382127051021956510890017");
 
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.sub(y);
+      const expected = testCase.difference;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
@@ -113,6 +132,16 @@ describe("BigInt: Sanity", () => {
     const biY = BigInt.fromString(intY);
     const biZ = BigInt.fromString(intZ);
     expect(biY.mul(biZ).toString()).toStrictEqual("82746900920364325240080057746476164545617939441639416531994182441731305785122054220");
+
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.mul(y);
+      const expected = testCase.product;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
@@ -122,12 +151,6 @@ describe("BigInt: Sanity", () => {
     const intB = 1000
     const biA = BigInt.fromString(intA);
     expect(biA.divInt(intB).toString()).toStrictEqual("1748673246820348602804623476982897439256983468762846982060929060");
-
-    // modulo small integer
-    const intC = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intD = 1000
-    const biC = BigInt.fromString(intC);
-    expect(biC.modInt(intD).toString()).toStrictEqual("934");
 
     // division by big integer
     const intE = "1748673246820348602804623476982897439256983468762846982060929060934";
@@ -155,6 +178,42 @@ describe("BigInt: Sanity", () => {
     const biY = BigInt.fromString(intY);
     const biZ = BigInt.fromString(intZ);
     expect(biY.div(biZ).toString()).toStrictEqual("8544259795730238462");
+
+    // divide by zero
+    const divByZero = (): void => {
+      const nonZero = BigInt.fromString("35823842568276438628975286634856582347658628346932865892348763");
+      const error = nonZero.div(BigInt.ZERO);
+    }
+    expect(divByZero).toThrow("Divide by zero");
+
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      if (y.ne(BigInt.ZERO)) {
+        const actual = x.div(y);
+        const expected = testCase.quotient;
+        expect(actual.toString()).toStrictEqual(expected);
+      }
+    }
+  });
+
+  it("Modulo", () => {
+    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
+    const intB = 1000;
+    const biA = BigInt.fromString(intA);
+    expect(biA.modInt(intB).toString()).toStrictEqual("934");
+
+    const intC = "2346723486098230948609234809680924830623486934693035798178094579834709857342786097348979348793487826974309869284709634809760293847680973429786932";
+    const intD = 26346234;
+    const biC = BigInt.fromString(intC);
+    expect(biC.modInt(intD).toString()).toStrictEqual("26169584");
+
+    const posInt = "105697141579807349879852798073409832708927897823784178914830990148091970135287935278935178093152879873152981537"
+    const negInt = 34634
+    const posBI = BigInt.fromString(posInt);
+    expect(posBI.modInt(negInt).toString()).toStrictEqual("15525");
   });
 
 });

@@ -1,6 +1,7 @@
 import { BigInt } from "../BigInt";
+import {TestCase} from "./TestCase";
 
-describe("BigInt: Sanity", () => {
+describe("Constructors", () => {
 
   it("Constructs from strings", () => {
     // constructor with small integer
@@ -50,4 +51,21 @@ describe("BigInt: Sanity", () => {
     expect(bigIntBigDigNeg.toString()).toStrictEqual(I64.MIN_VALUE.toString());
     expect(bigIntBigDigNeg.isNegative).toStrictEqual(true);
   });
+
+  it("produces Math.floor on decimal input", () => {
+    const bi = BigInt.fromString("9324670293476.459378389");
+    expect(bi.toString()).toStrictEqual("9324670293476");
+  });
+
+});
+
+describe("Constructor exceptions", () => {
+
+  it("throws on letter input", () => {
+    const letterConstruct = (): void => {
+      const bi = BigInt.fromString("jladsgkl");
+    }
+    expect(letterConstruct).toThrow();
+  });
+
 });
