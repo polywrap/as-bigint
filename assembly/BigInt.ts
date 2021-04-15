@@ -257,20 +257,20 @@ export class BigInt {
   // eslint-disable-next-line @typescript-eslint/member-ordering
   sqrt(): BigInt {
     if (this.isNegative) throw new  RangeError("Square root of negative numbers is not supported");
-    const one = BigInt.ONE.copy();
+    const one = BigInt.ONE;
     const three = BigInt.fromDigits([3]);
-    let z: BigInt = BigInt.ZERO.copy();
+    let z: BigInt = BigInt.ZERO;
     if (this.gt(three)) {
-      z = this.copy();
+      z = this;
       let x: BigInt = this.divInt(2).add(one);
       while (x.lt(z)) {
-        z = x.copy();
+        z = x;
         x = this.div(x).add(x).divInt(2);
       }
     } else if (!this.eq(BigInt.ZERO)) {
       z = one;
     }
-    return z;
+    return z.copy();
   }
 
   static sqrt(y: BigInt): BigInt {
