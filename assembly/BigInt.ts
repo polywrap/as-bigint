@@ -134,7 +134,7 @@ export class BigInt {
     if (cmp < 0) {
       return other.sub(this).opposite();
     } else if (cmp == 0) {
-      return BigInt.ZERO;
+      return BigInt.ZERO.copy();
     }
     // subtraction
     const res: BigInt = this.copy();
@@ -184,7 +184,7 @@ export class BigInt {
   @operator("/")
   div(other: BigInt): BigInt {
     if (other.absCompareTo(BigInt.ZERO) == 0) throw new RangeError("Divide by zero");
-    if (other.absCompareTo(this) > 0) return BigInt.ZERO;
+    if (other.absCompareTo(this) > 0) return BigInt.ZERO.copy();
     if (other._d.length == 1) {
       const otherInt: i32 = other.isNegative ? -1 * other._d[0] : other._d[0];
       return this.divInt(otherInt);
@@ -207,7 +207,7 @@ export class BigInt {
     }
     let res: BigInt;
     if (lo.lte(BigInt.ONE)) {
-      res = BigInt.ONE;
+      res = BigInt.ONE.copy();
     } else {
       res = lo.sub(BigInt.ONE);
     }
@@ -257,14 +257,14 @@ export class BigInt {
   // eslint-disable-next-line @typescript-eslint/member-ordering
   sqrt(): BigInt {
     if (this.isNegative) throw new  RangeError("Square root of negative numbers is not supported");
-    const one = BigInt.ONE;
+    const one = BigInt.ONE.copy();
     const three = BigInt.fromDigits([3]);
-    let z: BigInt = BigInt.ZERO;
+    let z: BigInt = BigInt.ZERO.copy();
     if (this.gt(three)) {
-      z = this;
+      z = this.copy();
       let x: BigInt = this.divInt(2).add(one);
       while (x.lt(z)) {
-        z = x;
+        z = x.copy();
         x = this.div(x).add(x).divInt(2);
       }
     } else if (!this.eq(BigInt.ZERO)) {
