@@ -146,12 +146,6 @@ describe("BigInt: Arithmetic", () => {
 
 
   it("Division", () => {
-    // division by small integer
-    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intB = 1000
-    const biA = BigInt.fromString(intA);
-    expect(biA.divInt(intB).toString()).toStrictEqual("1748673246820348602804623476982897439256983468762846982060929060");
-
     // division by big integer
     const intE = "1748673246820348602804623476982897439256983468762846982060929060934";
     const intF = "1000000000000000000000000000000000000000"
@@ -182,7 +176,7 @@ describe("BigInt: Arithmetic", () => {
     // divide by zero
     const divByZero = (): void => {
       const nonZero = BigInt.fromString("35823842568276438628975286634856582347658628346932865892348763");
-      const error = nonZero.div(BigInt.ZERO);
+      const error = nonZero.div(BigInt.fromUInt16(0));
     }
     expect(divByZero).toThrow("Divide by zero");
 
@@ -191,7 +185,7 @@ describe("BigInt: Arithmetic", () => {
       const testCase = testCases[i];
       const x = BigInt.fromString(testCase.x);
       const y = BigInt.fromString(testCase.y);
-      if (y.ne(BigInt.ZERO)) {
+      if (y.ne(BigInt.fromUInt16(0))) {
         const actual = x.div(y);
         const expected = testCase.quotient;
         expect(actual.toString()).toStrictEqual(expected);
@@ -201,19 +195,19 @@ describe("BigInt: Arithmetic", () => {
 
   it("Modulo", () => {
     const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intB = 1000;
+    const intB = BigInt.fromUInt32(1000);
     const biA = BigInt.fromString(intA);
-    expect(biA.modInt(intB).toString()).toStrictEqual("934");
+    expect(biA.mod(intB).toString()).toStrictEqual("934");
 
     const intC = "2346723486098230948609234809680924830623486934693035798178094579834709857342786097348979348793487826974309869284709634809760293847680973429786932";
-    const intD = 26346234;
+    const intD = BigInt.fromUInt32(26346234);
     const biC = BigInt.fromString(intC);
-    expect(biC.modInt(intD).toString()).toStrictEqual("26169584");
+    expect(biC.mod(intD).toString()).toStrictEqual("26169584");
 
-    const posInt = "105697141579807349879852798073409832708927897823784178914830990148091970135287935278935178093152879873152981537"
-    const negInt = 34634
-    const posBI = BigInt.fromString(posInt);
-    expect(posBI.modInt(negInt).toString()).toStrictEqual("15525");
+    const intE = "105697141579807349879852798073409832708927897823784178914830990148091970135287935278935178093152879873152981537"
+    const intF = BigInt.fromUInt32(34634);
+    const biE = BigInt.fromString(intE);
+    expect(biE.mod(intF).toString()).toStrictEqual("15525");
   });
 
 });

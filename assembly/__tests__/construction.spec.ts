@@ -1,9 +1,10 @@
 import { BigInt } from "../BigInt";
-import {TestCase} from "./TestCase";
 
-describe("Constructors", () => {
+// TODO: test radix N input and output
 
-  it("Constructs from strings", () => {
+describe("String Construction", () => {
+
+  it("Constructs from radix 10 strings", () => {
     // constructor with small integer
     const smallStr = "100";
     const bigIntSmallStrCon = BigInt.fromString(smallStr);
@@ -25,36 +26,59 @@ describe("Constructors", () => {
     expect(bigIntBigStrNeg.isNegative).toStrictEqual(true);
   });
 
-  it("Constructs from i32[]", () => {
-    // construct with big integer from digits
-    const bigDig: u32[] = [1000, 1000, 1000];
-    const bigIntBigDig = BigInt.fromDigits(bigDig);
-    expect(bigIntBigDig.toString()).toStrictEqual("1000000001000000001000");
-    expect(bigIntBigDig.isNegative).toStrictEqual(false);
+});
 
-    // construct with negative big integer from digits
-    const bigIntBigDigNeg = BigInt.fromDigits(bigDig, true);
-    expect(bigIntBigDigNeg.toString()).toStrictEqual("-1000000001000000001000");
-    expect(bigIntBigDigNeg.isNegative).toStrictEqual(true);
+describe("Construction from Uint16, Uint32, Uint64", () => {
+
+  it("Constructs from u16", () => {
+    const maxValue: u16 = U16.MAX_VALUE
+    const biMaxValue = BigInt.fromUInt16(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(U16.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
+
+    const zero: u16 = 0
+    const zeroBI = BigInt.fromUInt16(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: u16 = 1
+    const biOne = BigInt.fromUInt16(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
   });
 
-  it("Constructs from i64", () => {
-    // construct with big integer from i64
-    const bigDig: i64 = I64.MAX_VALUE
-    const bigIntBigDig = BigInt.fromInt(bigDig);
-    expect(bigIntBigDig.toString()).toStrictEqual(I64.MAX_VALUE.toString());
-    expect(bigIntBigDig.isNegative).toStrictEqual(false);
+  it("Constructs from u32", () => {
+    const maxValue: u32 = U32.MAX_VALUE
+    const biMaxValue = BigInt.fromUInt32(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(U32.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
 
-    // construct with negative big integer from digits
-    const bigDigNeg: i64 = I64.MIN_VALUE
-    const bigIntBigDigNeg = BigInt.fromInt(bigDigNeg);
-    expect(bigIntBigDigNeg.toString()).toStrictEqual(I64.MIN_VALUE.toString());
-    expect(bigIntBigDigNeg.isNegative).toStrictEqual(true);
+    const zero: u32 = 0
+    const zeroBI = BigInt.fromUInt32(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: u32 = 1
+    const biOne = BigInt.fromUInt32(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
   });
 
-  it("produces Math.floor on decimal input", () => {
-    const bi = BigInt.fromString("9324670293476.459378389");
-    expect(bi.toString()).toStrictEqual("9324670293476");
+  it("Constructs from u64", () => {
+    const maxValue: u64 = U64.MAX_VALUE
+    const biMaxValue = BigInt.fromUInt64(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(U64.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
+
+    const zero: u64 = 0
+    const zeroBI = BigInt.fromUInt64(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: u64 = 1
+    const biOne = BigInt.fromUInt64(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
   });
 
 });

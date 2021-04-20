@@ -1,294 +1,173 @@
 
 export class BigInt {
-  public static ZERO: BigInt = new BigInt("0");
-  public static ONE: BigInt = new BigInt("1");
 
-  public readonly isNegative: boolean;
-  private readonly _d: u32[] = []; // digits stored from least to most significant
-  private readonly _e: i32 = 9;
-  private readonly _base: u32 = 10 ** <u32>this._e;
-
-  private constructor(bigNumber: string, isNegative: boolean = false) {
-    // check sign
-    this.isNegative = isNegative;
-    // parse string in baseE-digit segments
-    for (let i = bigNumber.length; i > 0; i -= this._e) {
-      let digitStr: string;
-      if (i < this._e) {
-        digitStr = bigNumber.substring(0, i);
-      } else {
-        digitStr = bigNumber.substring(i - this._e, i);
-      }
-      this._d.push(U32.parseInt(digitStr));
-    }
-    // remove any leading zeros
-    this.trimLeadingZeros();
+  private d: Uint32Array; // digits
+  private n: i32 = 0; // digits used
+  private isNeg: boolean; // sign
+  get isNegative(): boolean {
+    return this.isNeg;
   }
 
-  static fromString(bigNumber: string): BigInt {
-    let isNegative = false;
-    // check for negative number
-    if (bigNumber.charAt(0) == "-") {
+  private static readonly q: i32 = 2;
+  private static readonly p: i32 = 28; // bits used in digit
+  private static readonly b: u32 = BigInt.q ** BigInt.p; // digit basis
+  private static readonly actualBits: i32 = 32; // bits available in type (single precision)
+  // private static readonly doubleActualBits: i32 = 64 // 2 * BigIntMP.actualBits -> "double precision" actual bits
+  private static readonly maxComba: i32 = 256 // 2^(doubleActualBits - 2 * p) = 2^8 = 256
+
+  private static readonly digitMask: u32 = ((<u32>1) << <u32>BigInt.p) - (<u32>1); // mask p least significant bits
+
+  private static readonly precision: i32 = 5; // base array size fits 140 bit integers
+
+  // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  private constructor(size: i32 = BigInt.precision, isNegative: boolean = false) {
+    this.d = new Uint32Array(size);
+    this.isNeg = isNegative;
+  }
+
+  static fromString(bigInteger: string, radix: i32 = 10): BigInt {
+    if (radix < 2 || radix > 10) {
+      throw new RangeError("BigInt only reads strings of radix 2 through 10");
+    }
+    let i: i32 = 0;
+    let isNegative: boolean = false;
+    if (bigInteger.charAt(0) == "-") {
+      i++;
       isNegative = true;
-      bigNumber = bigNumber.substring(1);
     }
-    // check for decimal -> drop anything after first decimal point
-    const decimalIndex = bigNumber.indexOf(".");
-    if (decimalIndex != -1) {
-      bigNumber = bigNumber.substring(0, decimalIndex);
+    let res: BigInt = BigInt.fromUInt16(0);
+    const radixU: u16 = <u16>radix;
+    for (; i < bigInteger.length; i++) {
+      let val: u16 = <u16>(bigInteger.charCodeAt(i) - 48);
+      if (val >= radixU) {
+        throw new RangeError("Character " + bigInteger.charAt(i) + " is not supported for radix " + radix.toString());
+      }
+      res = res.mulInt(radixU).addInt(val);
     }
-    // empty string is zero
-    if (bigNumber.length == 0) {
-      return new BigInt("0");
-    }
-    // use char codes to prevent non-numbers; 48-57 => 0-9
-    for (let i = 0; i < bigNumber.length; i++) {
-      const c = bigNumber.charCodeAt(i);
-      if (c < 48 || c > 57)
-        throw new Error("Cannot construct BigInt from non-integer character string");
-    }
-    return new BigInt(bigNumber, isNegative);
-  }
-
-  static fromDigits(digits: u32[], isNegative: boolean = false): BigInt {
-    // prevent empty array
-    if (digits.length == 0) {
-      return new BigInt("0");
-    }
-    // create BigInt
-    const res = new BigInt("", isNegative);
-    for (let i = 0; i < digits.length; i++) {
-      res._d.push(digits[i]);
-    }
+    res.isNeg = isNegative;
     res.trimLeadingZeros();
-    // prevent negative zero
-    if (res._d.length == 1 && res._d[0] == 0) {
-      return new BigInt("0");
-    }
     return res;
   }
 
-  static fromInt(value: i64): BigInt {
-    return BigInt.fromString(value.toString());
+  static fromUInt16(digit: u16): BigInt {
+    const res = new BigInt(BigInt.precision, false);
+    res.d[0] = <u32>digit & BigInt.digitMask;
+    res.n = res.d[0] != 0 ? 1 : 0;
+    return res;
+  }
+
+  static fromUInt32(digit: u32): BigInt {
+    const res = new BigInt(BigInt.precision, false);
+    let i = 0;
+    while (digit != 0) {
+      res.d[i++] = digit & BigInt.digitMask;
+      digit >>= BigInt.p;
+    }
+    res.n = i;
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  static fromUInt64(digit: u64): BigInt {
+    const res = new BigInt(BigInt.precision, false);
+    let i = 0;
+    while (digit != 0) {
+      res.d[i++] = <u32>digit & BigInt.digitMask;
+      digit >>= BigInt.p;
+    }
+    res.n = i;
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // O(N)
+  private static fromDigits(digits: Uint32Array, isNegative: boolean = false, n: i32 = digits.length, minSize: i32 = digits.length): BigInt {
+    let size = minSize;
+    if (size < digits.length) {
+      size = digits.length;
+    }
+    const extra = size % BigInt.precision;
+    if (extra != 0) {
+      size += BigInt.precision - extra;
+    }
+    const res: BigInt = new BigInt(size, isNegative);
+    for (let i = 0; i < digits.length; i++) {
+      res.d[i] = digits[i];
+    }
+    res.n = n;
+    return res;
   }
 
   // O(N)
   copy(): BigInt {
-    return BigInt.fromDigits(this._d, this.isNegative);
+    return BigInt.fromDigits(this.d, this.isNeg, this.n);
   }
 
   // O(N)
   opposite(): BigInt {
-    return BigInt.fromDigits(this._d, !this.isNegative);
+    return BigInt.fromDigits(this.d, this.n > 0 && !this.isNeg, this.n);
   }
 
+  // O(N)
   abs(): BigInt {
-    return this.isNegative ? this.opposite() : this.copy();
+    return BigInt.fromDigits(this.d, false, this.n);
   }
 
-  // O(N)
-  @operator("+")
-  add(other: BigInt): BigInt {
-    if (this.isNegative && !other.isNegative) {
-      return other.sub(this.opposite());
-    } else if (!this.isNegative && other.isNegative) {
-      return this.sub(other.opposite());
-    }
-    const res: BigInt = this.copy();
-    let carry: bool = 0;
-    const n = Math.max(res._d.length, other._d.length);
-    for (let i = 0; i < n || carry; i++) {
-      if (i == res._d.length) {
-        res._d.push(0);
-      }
-      res._d[i] += carry + (i < other._d.length ? other._d[i] : 0);
-      carry = res._d[i] >= res._base ? 1 : 0;
-      if (carry) {
-        res._d[i] -= res._base;
-      }
-    }
-    return res.trimLeadingZeros();
-  }
-
-  static add(left: BigInt, right: BigInt): BigInt {
-    return left.add(right);
-  }
-
-  // O(N)
-  @operator("-")
-  sub(other: BigInt): BigInt {
-    // reframe negative values
-    if (this.isNegative && other.isNegative) {
-      return other.opposite().sub(this.opposite());
-    } else if (!this.isNegative && other.isNegative) {
-      return this.add(other.opposite());
-    } else if (this.isNegative && !other.isNegative) {
-      return this.add(other.opposite());
-    }
-    // shortcut
-    if (this._d.length == 1 && other._d.length == 1) {
-      return BigInt.fromInt(<i64>this._d[0] - other._d[0]);
-    }
-    // handle large right-hand-side value
-    const cmp: i32 = this.absCompareTo(other);
-    if (cmp < 0) {
-      return other.sub(this).opposite();
-    } else if (cmp == 0) {
-      return BigInt.ZERO.copy();
-    }
-    // subtraction
-    const res: BigInt = this.copy();
-    let carry: bool = 0;
-    for (let i = 0; i < other._d.length || carry; i++) {
-      const subVal: i64 = <i64>(i < other._d.length ? other._d[i] : 0);
-      const val: i64 = <i64>res._d[i] - carry - subVal;
-      carry = val < 0 ? 1 : 0;
-      if (carry) {
-        res._d[i] = <u32>(val + res._base);
-      } else {
-        res._d[i] = <u32>val;
-      }
-    }
-    return res.trimLeadingZeros();
-  }
-
-  static sub(left: BigInt, right: BigInt): BigInt {
-    return left.sub(right);
-  }
-
-  // O(N^2) -- this is the "school book" algorithm, which mimics the way we learn to do multiplication by hand as children
-  // Although it is O(N^2), it is faster in practice than asymptotically better algorithms for multiplicands of <= 256 bits
-  @operator("*")
-  mul(other: BigInt): BigInt {
-    const res: u32[] = new Array<u32>(this._d.length + other._d.length);
-    for (let i = 0; i < this._d.length; i++) {
-      let carry: u64 = 0;
-      for (let j = 0; j < other._d.length || carry; j++) {
-        if (j >= other._d.length) {
-          res.push(0);
-        }
-        const otherVal = j < other._d.length ? other._d[j] : 0;
-        const cur: u64 = res[i + j] + <u64>this._d[i] * otherVal + carry;
-        res[i + j] = <u32>(cur % this._base);
-        carry = cur / this._base;
-      }
-    }
-    return BigInt.fromDigits(res, this.isNegative != other.isNegative);
-  }
-
-  static mul(left: BigInt, right: BigInt): BigInt {
-    return left.mul(right);
-  }
-
-  // using binary search -> ~O(logZ*N^2) where Z is the magnitude of the numerator
-  @operator("/")
-  div(other: BigInt): BigInt {
-    if (other.absCompareTo(BigInt.ZERO) == 0) throw new RangeError("Divide by zero");
-    if (other.absCompareTo(this) > 0) return BigInt.ZERO.copy();
-    if (other._d.length == 1) {
-      const otherInt: i32 = other.isNegative ? -1 * other._d[0] : other._d[0];
-      return this.divInt(otherInt);
-    }
-    // set starting values
-    let lo: BigInt = BigInt.ZERO;
-    let hi: BigInt = this.abs();
-    // TODO: can I improve lower bounds?
-    // improve bounds to improve performance
-    for (let i = other._d.length; i > 1; i--) {
-      hi._d.pop();
-    }
-    // search
-    while (lo.lte(hi)) {
-      const mid: BigInt = hi.sub(lo).divInt(2).add(lo);
-      const cmp: i32 = this.absCompareTo(other.mul(mid));
-      if (cmp < 0) hi = mid.sub(BigInt.ONE);
-      else if (cmp > 0) lo = mid.add(BigInt.ONE);
-      else return this.isNegative != other.isNegative ? mid.opposite() : mid;
-    }
-    let res: BigInt;
-    if (lo.lte(BigInt.ONE)) {
-      res = BigInt.ONE.copy();
-    } else {
-      res = lo.sub(BigInt.ONE);
-    }
-    if (this.isNegative != other.isNegative) {
-      return res.opposite();
-    }
+  private static getEmptyResultContainer(minSize: i32, isNegative: boolean, n: i32): BigInt {
+    const size: i32 = minSize + BigInt.precision - minSize % BigInt.precision;
+    const res: BigInt = new BigInt(size, isNegative);
+    res.n = n;
     return res;
   }
 
-  static div(left: BigInt, right: BigInt): BigInt {
-    return left.div(right);
+  // MAINTENANCE FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
+
+  private trimLeadingZeros(): void {
+    while (this.n > 0 && this.d[this.n - 1] == 0) {
+      this.n--;
+    }
+    if (this.n == 0) {
+      this.isNeg = false;
+    }
   }
 
-  // O(N)
-  divInt(other: i32): BigInt {
-    if (other == 0) throw new RangeError("Divide by zero");
-    const res = BigInt.fromDigits(this._d, this.isNegative != other < 0);
-    if (other < 0) {
-      other *= -1;
+  private resize(max: i32): void {
+    const temp: Uint32Array = new Uint32Array(max);
+    for (let i = 0; i < this.n; i++) {
+      temp[i] = this.d[i];
     }
-    let carry: u64 = 0;
-    for (let i = res._d.length - 1; i >= 0; i--) {
-      const cur: u64 = res._d[i] + carry * res._base;
-      res._d[i] = <u32>(cur / other);
-      carry = cur % other;
-    }
-    return res.trimLeadingZeros();
+    this.d = temp;
   }
 
-  // O(N)
-  modInt(other: u32): u64 {
-    if (other == 0) throw new RangeError("Mod zero is undefined");
-    if (this._d.length == 1) {
-      return this.isNegative ? (-1 * this._d[0]) % other : this._d[0] % other;
-    }
-    const res = BigInt.fromDigits(this._d, this.isNegative);
-    let carry: u64 = 0;
-    for (let i = res._d.length - 1; i >= 0; i--) {
-      const cur: u64 = res._d[i] + carry * res._base;
-      res._d[i] = <u32>(cur / other);
-      carry = cur % other;
-    }
-    return carry;
+  private grow(size: i32): void {
+    if (this.d.length >= size) return;
+    this.resize(size + 2 * BigInt.precision - size % BigInt.precision);
   }
 
-  // Babylonian method (as used in Uniswap contracts)
-  // eslint-disable-next-line @typescript-eslint/member-ordering
-  sqrt(): BigInt {
-    if (this.isNegative) throw new  RangeError("Square root of negative numbers is not supported");
-    const one = BigInt.ONE;
-    const three = BigInt.fromDigits([3]);
-    let z: BigInt = BigInt.ZERO;
-    if (this.gt(three)) {
-      z = this;
-      let x: BigInt = this.divInt(2).add(one);
-      while (x.lt(z)) {
-        z = x;
-        x = this.div(x).add(x).divInt(2);
-      }
-    } else if (!this.eq(BigInt.ZERO)) {
-      z = one;
-    }
-    return z.copy();
-  }
+  // STRING OUTPUT /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  static sqrt(y: BigInt): BigInt {
-    return y.sqrt();
-  }
-
-  pow(exponent: u64): BigInt {
-    this.trimLeadingZeros();
-    let res: BigInt = this.copy();
-    for (let i: u64 = 1; i < exponent; i++) {
-      res = res.mul(this);
+  toString(radix: i32 = 10): string {
+    if (radix < 2 || radix > 10) {
+      throw new RangeError("BigInt only prints strings in radix 2 through 10");
     }
+    if (this.n == 0) return "0";
+    let res: string = this.isNeg ? "-" : "";
+    let t: BigInt = this.abs();
+    const zero: BigInt = BigInt.fromUInt16(0);
+    const codes: i32[] = [];
+    const radixU: u16 = <u16>radix;
+    while (t.ne(zero)) {
+      const d: i32 = <i32>(t.modInt(radixU));
+      t = t.divInt(radixU);
+      codes.push(d + 48);
+    }
+    codes.reverse();
+    res += String.fromCharCodes(codes);
     return res;
   }
 
-  static pow(base: BigInt, exponent: u64): BigInt {
-    return base.pow(exponent);
-  }
+  // COMPARISON OPERATORS //////////////////////////////////////////////////////////////////////////////////////////////
 
   @operator("==")
   eq(other: BigInt): boolean {
@@ -346,55 +225,620 @@ export class BigInt {
 
   compareTo(other: BigInt): i32 {
     // opposite signs
-    if (this.isNegative && !other.isNegative) return -1;
-    if (!this.isNegative && other.isNegative) return 1;
-    // different number of "digits"
-    if (this._d.length != other._d.length) {
-      if (this._d.length > other._d.length)
-        return this.isNegative ? -1 : 1;
-      if (this._d.length < other._d.length)
-        return this.isNegative ? 1 : -1;
+    if (this.isNeg && !other.isNeg) {
+      return -1;
+    } else if (!this.isNeg && other.isNeg) {
+      return 1;
+    } else if (this.isNeg) {
+      return other.magCompareTo(this);
+    } else {
+      return this.magCompareTo(other);
     }
-    // numbers are same length, so check each "digit"
-    for (let i = this._d.length - 1; i >= 0; i--) {
-      if (this._d[i] < other._d[i])
-        return this.isNegative ? 1 : -1;
-      if (this._d[i] > other._d[i])
-        return this.isNegative ? -1 : 1;
+  }
+
+  magCompareTo(other: BigInt): i32 {
+    if (this.n > other.n) return 1;
+    if (this.n < other.n) return -1;
+    for (let i = this.n - 1; i >= 0; i--) {
+      if (this.d[i] != other.d[i]) {
+        if (this.d[i] < other.d[i]) return -1;
+        else return 1;
+      }
     }
     return 0;
   }
 
-  // compares number magnitudes, ignoring sign
-  absCompareTo(other: BigInt): i32 {
-    this.trimLeadingZeros();
-    other.trimLeadingZeros();
-    // different number of "digits"
-    if (this._d.length > other._d.length) return 1;
-    if (this._d.length < other._d.length) return -1;
-    // numbers are same length, so check each "digit"
-    for (let i = this._d.length - 1; i >= 0; i--) {
-      if (this._d[i] < other._d[i]) return -1;
-      if (this._d[i] > other._d[i]) return 1;
+  // CORE MATH OPERATIONS //////////////////////////////////////////////////////////////////////////////////////////////
+
+  // signed addition
+  @operator("+")
+  add(other: BigInt): BigInt {
+    if (this.isNeg == other.isNeg) {
+      return this._add(other, this.isNeg);
+    } else if (this.magCompareTo(other) < 0) {
+      return other._sub(this, other.isNeg);
+    } else {
+      return this._sub(other, this.isNeg);
     }
-    return 0;
   }
 
-  // O(N)
-  toString(): string {
-    if (this._d.length == 0) return "0";
-    let res = this.isNegative ? "-" : "";
-    res += this._d[this._d.length - 1].toString();
-    for (let i = this._d.length - 2; i >= 0; i--) {
-      res += this._d[i].toString().padStart(this._e, "0");
+  // signed subtraction
+  @operator("-")
+  sub(other: BigInt): BigInt {
+    if (this.isNeg != other.isNeg) {
+      return this._add(other, this.isNeg);
+    } else if (this.magCompareTo(other) >= 0) {
+      return this._sub(other, this.isNeg);
+    } else {
+      return other._sub(this, !this.isNeg);
+    }
+  }
+
+  // unsigned addition
+  private _add(other: BigInt, resultIsNegative: boolean): BigInt {
+    // determine which summand is larger
+    let min: i32;
+    let max: i32;
+    let x: BigInt;
+    if (this.n > other.n) {
+      min = other.n;
+      max = this.n;
+      x = this;
+    } else {
+      min = this.n;
+      max = other.n;
+      x = other;
+    }
+    // initialize result
+    const res: BigInt = BigInt.getEmptyResultContainer(max + 1, resultIsNegative, max);
+    // add
+    let carry: u32 = 0;
+    let i: i32 = 0;
+    for (; i < min; i++) {
+      res.d[i] = this.d[i] + other.d[i] + carry;
+      carry = res.d[i] >> BigInt.p;
+      res.d[i] &= BigInt.digitMask;
+    }
+    if (min != max) {
+      for (; i < max; i++) {
+        res.d[i] = x.d[i] + carry;
+        carry = res.d[i] >> BigInt.p;
+        res.d[i] &= BigInt.digitMask;
+      }
+    }
+    if (carry > 0) {
+      res.d[max] = carry;
+      res.n++;
     }
     return res;
   }
 
-  private trimLeadingZeros(): BigInt {
-    while (this._d.length > 1 && this._d[this._d.length - 1] == 0) {
-      this._d.pop();
+  // unsigned subtraction
+  private _sub(other: BigInt, resultIsNegative: boolean): BigInt {
+    const min: i32 = other.n;
+    const max: i32 = this.n;
+    // initialize result
+    const res: BigInt = BigInt.getEmptyResultContainer(max, resultIsNegative, max);
+    // subtract
+    let carry: u32 = 0;
+    let i: i32 = 0;
+    for (; i < min; i++) {
+      res.d[i] = this.d[i] - other.d[i] - carry;
+      carry = res.d[i] >> BigInt.actualBits - 1;
+      res.d[i] &= BigInt.digitMask;
+    }
+    if (min < max) {
+      for (; i < max; i++) {
+        res.d[i] = this.d[i] - carry;
+        carry = res.d[i] >> BigInt.actualBits - 1;
+        res.d[i] &= BigInt.digitMask;
+      }
+    }
+    // trim and return
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // efficient multiply by 2
+  mul2(): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(this.n + 1, this.isNeg, this.n);
+    let r: u32 = 0;
+    for (let i = 0; i < this.n; i++) {
+      let rr: u32 = this.d[i] >> BigInt.p - 1;
+      res.d[i] = (this.d[i] << 1 | r) & BigInt.digitMask;
+      r = rr;
+    }
+    if (r != 0) {
+      res.d[res.n++] = 1;
+    }
+    return res;
+  }
+
+  // efficient div by 2
+  div2(): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(this.n, this.isNeg, this.n);
+    let r: u32 = 0;
+    for (let i = this.n - 1; i >= 0; i--) {
+      let rr: u32 = this.d[i] % 2;
+      res.d[i] = (this.d[i] >> 1) | (r << BigInt.p - 1);
+      r = rr;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // multiples BigInt by power of basis
+  // *** mutates BigInt ***
+  private mulBasisPow(b: i32): void {
+    if (b <= 0) return;
+    this.grow(this.n + b);
+    this.n += b;
+    let i: i32 = this.n - 1;
+    let j: i32 = this.n - 1 - b;
+    for (; i >= b; i--, j--) {
+      this.d[i] = this.d[j];
+    }
+    for (; i >= 0; i--) {
+      this.d[i] = 0;
+    }
+  }
+
+  // divides BigInt by power of basis
+  // *** mutates BigInt ***
+  private divBasisPow(b: i32): void {
+    if (b <= 0) return;
+    // integer division with denominator > numerator = 0
+    if (this.n <= b) {
+      this.n = 0;
+      this.trimLeadingZeros();
+      return;
+    }
+    // division
+    let i: i32 = 0;
+    let j: i32 = b;
+    for (; i < this.n - b; i++, j++) {
+      this.d[i] = this.d[j];
+    }
+    for (; i < this.n; i++) {
+      this.d[i] = 0;
+    }
+    this.n -= b;
+  }
+
+  // multiply by power of 2
+  // O(2N)
+  mulPowTwo(k: i32): BigInt {
+    if (k <= 0) {
+      return this.copy();
+    }
+    const minSize: i32 = this.n + k / BigInt.p + 1;
+    const res = BigInt.fromDigits(this.d, this.isNeg, this.n, minSize);
+    // shift by entire digits
+    if (k >= BigInt.p) {
+      res.mulBasisPow(k / BigInt.p);
+    }
+    // shift by k % p bits
+    const remK: i32 = k % BigInt.p;
+    if (remK != 0) {
+      const mask: u32 = (<u32>1 << remK) - <u32>1;
+      const shift: i32 = BigInt.p - remK;
+      let r: u32 = 0;
+      for (let i = 0; i < res.n; i++) {
+        let rr: u32 = (res.d[i] >> shift) & mask;
+        res.d[i] = ((res.d[i] << remK) | r) & BigInt.digitMask;
+        r = rr;
+      }
+      if (r != 0) {
+        res.d[res.n++] = r;
+      }
+    }
+    return res;
+  }
+
+  // divide by power of 2
+  divPowTwo(k: i32): BigInt {
+    const res = this.copy();
+    if (k == 0) {
+      return res;
+    }
+    if (k >= BigInt.p) {
+      res.divBasisPow(k / BigInt.p);
+    }
+    const remK: i32 = k % BigInt.p;
+    if (remK != 0) {
+      const mask: u32 = (<u32>1 << remK) - <u32>1;
+      const shift: i32 = BigInt.p - remK;
+      let r: u32 = 0;
+      for (let i = res.n - 1; i >= 0; i--) {
+        let rr: u32 = res.d[i] & mask;
+        res.d[i] = (res.d[i] >> remK) | (r << shift);
+        r = rr;
+      }
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // remainder of division by power of 2
+  modPowTwo(k: i32): BigInt {
+    if (k == 0) {
+      return BigInt.fromUInt16(<u16>0);
+    }
+    const res = this.copy();
+    // if 2^k > BigInt, then BigInt % 2^k == BigInt
+    if (k > this.n * BigInt.p) {
+      return res;
+    }
+    // zero out unused digits (any digit greater than 2^b)
+    const kDivP: i32 = k / BigInt.p;
+    let i: i32 = kDivP + k % BigInt.p == 0 ? 0 : 1 // ceil of k / p
+    for (; i < res.n; i++) {
+      res.d[i] = 0;
+    }
+    // mod the remaining leading digit (which includes 2^b) using bitmask
+    // remK = k % BigIntMP.p
+    res.d[kDivP] &= (<u32>1 << (k % BigInt.p)) - <u32>1;
+    // trim and return
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // MULTIPLICATION ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // chooses best multiplication algorithm for situation and handles sign
+  @operator("*")
+  mul(other: BigInt): BigInt {
+    let res: BigInt;
+    const digitsNeeded: i32 = this.n + other.n + 1;
+    const minN: i32 = this.n <= other.n ? this.n : other.n;
+    if (digitsNeeded < BigInt.maxComba && minN < BigInt.maxComba) {
+      res = this._mulComba(other, digitsNeeded);
+    } else {
+      res = this._mulPartial(other, digitsNeeded);
+    }
+    res.isNeg = this.isNeg != other.isNeg && res.n > 0;
+    return res;
+  }
+
+  // unsigned multiplication that returns at most maxDigits
+  private _mulPartial(other: BigInt, maxDigits: i32): BigInt {
+    const min: i32 = this.n <= other.n ? this.n : other.n;
+    // optimization -> use Comba multiplication if possible
+    if (maxDigits < BigInt.maxComba && min < BigInt.maxComba) {
+      return this._mulComba(other, maxDigits);
+    }
+    const res = BigInt.getEmptyResultContainer(maxDigits, false, maxDigits);
+    // multiply using standard O(N^2) method taught in schools
+    for (let i = 0; i < this.n; i++) {
+      let r: u32 = 0;
+      const digsSubI: i32 = maxDigits - i;
+      let limitedN: i32 = other.n < digsSubI ? other.n : digsSubI;
+      for (let j = 0; j < limitedN; j++) {
+        let rr: u64 = <u64>res.d[i + j] + <u64>this.d[i] * other.d[j] + r;
+        res.d[i + j] = <u32>(rr & <u64>BigInt.digitMask);
+        r = <u32>(rr >> BigInt.p);
+      }
+      if (i + limitedN < maxDigits) {
+        res.d[i + limitedN] = r;
+      }
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // fast unsigned multiplication using Comba method
+  private _mulComba(other: BigInt, maxDigits: i32): BigInt {
+    const totalN = this.n + other.n;
+    const outerN: i32 = maxDigits < totalN ? maxDigits : totalN; // number of output digits to produce
+    const res = BigInt.getEmptyResultContainer(outerN, false, outerN);
+    let w: u64 = 0;
+    // multiply, ignoring carries
+    for (let i = 0; i < outerN; i++) {
+      // calculate tY and tX, offsets into the multiplicands
+      const maxJ: i32 = other.n - 1;
+      const tY: i32 = maxJ < i ? maxJ : i;
+      const tX: i32 = i - tY;
+      // calculate innerN, the number of times inner loop will iterate
+      const distFromEnd: i32 = this.n - tX;
+      const currentN: i32 = tY + 1;
+      const innerN: i32 = distFromEnd < currentN ? distFromEnd : currentN;
+      for (let j = 0; j < innerN; j++) {
+        w += <u64>this.d[tX + j] * other.d[tY - j];
+      }
+      res.d[i] = <u32>w & BigInt.digitMask;
+      w = w >> BigInt.p;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  pow(exponent: u32): BigInt {
+    let res: BigInt = this.copy();
+    for (let i: u32 = 1; i < exponent; i++) {
+      res = res.mul(this.copy());
+    }
+    return res;
+  }
+
+  // Babylonian method (as used in Uniswap contracts)
+  // https://github.com/Uniswap/uniswap-lib/blob/master/contracts/libraries/Babylonian.sol
+  // eslint-disable-next-line @typescript-eslint/member-ordering
+  sqrt(): BigInt {
+    if (this.isNeg) throw new RangeError("Square root of negative numbers is not supported");
+    if (this.n == 0) return this.copy();
+    let res: BigInt = BigInt.getEmptyResultContainer(this.d.length, false, 1);
+    res.d[0] = 1;
+    res = res.mulPowTwo(this.countBits() / 2);
+    for (let i = 0; i < 10; i++) {
+      res = this.div(res).add(res).div2();
+    }
+    const res1 = this.div(res);
+    return res.lt(res1) ? res : res1;
+  }
+
+  // DIVISION //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // handles sign and allows for easy replacement of algorithm in future update
+  @operator("/")
+  div(other: BigInt): BigInt {
+    return this._slowDiv(other);
+  }
+
+  // handles sign and allows for easy replacement of algorithm in future update
+  @operator("%")
+  mod(other: BigInt): BigInt {
+    return this._slowDivRemainder(other);
+  }
+
+  // TODO: fast division has bugs -> using "slow" division
+  // private _div(other: BigInt): BigInt {
+  //   if (other.eq(BigInt.fromUInt16(0))) {
+  //     throw new Error("Divide by zero");
+  //   }
+  //   const cmp: i32 = this.magCompareTo(other);
+  //   if (cmp < 0) {
+  //     return BigInt.fromUInt16(0);
+  //   } else if (cmp == 0) {
+  //     const q = BigInt.fromUInt16(1);
+  //     q.isNeg = this.isNeg != other.isNeg;
+  //     return q;
+  //   }
+  //   // set up numbers
+  //   let q: BigInt = BigInt.getEmptyResultContainer(this.n + 2, this.isNeg != other.isNeg, this.n);
+  //   let x: BigInt = this.abs();
+  //   let y: BigInt = other.abs();
+  //   // norm leading digits of x and y
+  //   let norm: i32 = y.countBits() % BigInt.p;
+  //   if (norm < BigInt.p - 1) {
+  //     norm = BigInt.p - 1 - norm;
+  //     x = x.mulPowTwo(norm);
+  //     y = y.mulPowTwo(norm);
+  //   } else {
+  //     norm = 0;
+  //   }
+  //   // find leading digit of quotient
+  //   const n: i32 = this.n - 1;
+  //   const t: i32 = other.n - 1;
+  //   const nSubt = n - t;
+  //   y.mulBasisPow(nSubt);
+  //   while (x.magCompareTo(y) >= 0) {
+  //     q.d[nSubt]++;
+  //     x = x.sub(y);
+  //   }
+  //   y.divBasisPow(nSubt);
+  //   // find remainder of digits
+  //   let temp1: BigInt;
+  //   let temp2: BigInt;
+  //   for (let i = n; i > t; i--) {
+  //     if (i > x.n) continue;
+  //     if (x.d[i] == y.d[t]) {
+  //       q.d[i-t-1] = BigInt.b - 1;
+  //     } else {
+  //      let r: u64 = <u64>x.d[i] << <u64>BigInt.p;
+  //      r |= <u64>x.d[i-1];
+  //      r /= <u64>y.d[t];
+  //      if (r > <u64>BigInt.digitMask) {
+  //        r = <u64>BigInt.digitMask;
+  //      }
+  //      q.d[i-t-1] = <u32>(r & <u64>BigInt.digitMask);
+  //     }
+  //     // fix up quotient estimation
+  //     q.d[i-t-1] = ++q.d[i-t-1] & BigInt.digitMask;
+  //     do {
+  //       q.d[i-t-1] = --q.d[i-t-1] & BigInt.digitMask;
+  //       // find left
+  //       temp1 = BigInt.getEmptyResultContainer(2, false, 2);
+  //       temp1.d[0] = t - 1 < 0 ? 0 : y.d[t-1];
+  //       temp1.d[1] = y.d[t];
+  //       temp1 = temp1.mul(BigInt.fromUInt32(q.d[i-t-1]));
+  //       // find right
+  //       temp2 = BigInt.getEmptyResultContainer(3, false, 3);
+  //       temp2.d[0] = i - 2 < 0 ? 0 : x.d[i-2];
+  //       temp2.d[1] = i - 1 < 0 ? 0 : x.d[i-1];
+  //       temp2.d[2] = x.d[i];
+  //     } while (temp1.magCompareTo(temp2) > 0);
+  //     //
+  //     temp1 = y.mul(BigInt.fromUInt32(q.d[i-t-1]));
+  //     temp1.mulBasisPow(i-t-1);
+  //     x = x.sub(temp1);
+  //     if (x.isNeg) {
+  //       temp1 = y.copy();
+  //       temp1.mulBasisPow(i-t-1);
+  //       x = x.add(temp1);
+  //       q.d[i-t-1] = --q.d[i-t-1] & BigInt.digitMask;
+  //     }
+  //   }
+  //   // finalize
+  //   q.trimLeadingZeros();
+  //   x.isNeg = x.n != 0 && this.isNeg;
+  //   let r: BigInt = x.divPowTwo(norm);
+  //   return q;
+  // }
+
+  _slowDiv(other: BigInt): BigInt {
+    if (other.eq(BigInt.fromUInt16(0))) {
+      throw new Error("Divide by zero");
+    }
+    const cmp: i32 = this.magCompareTo(other);
+    if (cmp < 0) {
+      return BigInt.fromUInt16(0);
+    } else if (cmp == 0) {
+      const q = BigInt.fromUInt16(1);
+      q.isNeg = this.isNeg != other.isNeg;
+      return q;
+    }
+    let q: BigInt = BigInt.fromUInt16(0);
+    let tempQ = BigInt.fromUInt16(1);
+    let n: i32 = this.countBits() - other.countBits();
+    let tempA = this.abs();
+    let tempB = other.abs();
+    tempB = tempB.mulPowTwo(n);
+    tempQ = tempQ.mulPowTwo(n);
+    for (; n >= 0; n--) {
+      if (tempB.magCompareTo(tempA) <= 0) {
+        tempA = tempA.sub(tempB);
+        q = q.add(tempQ);
+      }
+      tempB = tempB.div2();
+      tempQ = tempQ.div2();
+    }
+    q.isNeg = this.isNeg != other.isNeg;
+    q.trimLeadingZeros();
+    return q;
+  }
+
+  private _slowDivRemainder(other: BigInt): BigInt {
+    if (other.eq(BigInt.fromUInt16(0))) {
+      throw new Error("Divide zero error");
+    }
+    const cmp: i32 = this.magCompareTo(other);
+    if (cmp < 0) {
+      return this.copy()
+    } else if (cmp == 0) {
+      return BigInt.fromUInt16(0);
+    }
+    let q: BigInt = BigInt.fromUInt16(0);
+    let tempQ = BigInt.fromUInt16(1);
+    let n: i32 = this.countBits() - other.countBits();
+    let tempA = this.abs();
+    let tempB = other.abs();
+    tempB = tempB.mulPowTwo(n);
+    tempQ = tempQ.mulPowTwo(n);
+    for (; n >= 0; n--) {
+      if (tempB.magCompareTo(tempA) <= 0) {
+        tempA = tempA.sub(tempB);
+        q = q.add(tempQ);
+      }
+      tempB = tempB.div2();
+      tempQ = tempQ.div2();
+    }
+    let r: BigInt = tempA;
+    r.isNeg = this.isNeg;
+    r.trimLeadingZeros();
+    return r;
+  }
+
+  // SINGLE-DIGIT HELPERS //////////////////////////////////////////////////////////////////////////////////////////////
+
+  addInt(b: u16): BigInt {
+   return this.add(BigInt.fromUInt16(b));
+  }
+
+  subInt(b: u16): BigInt {
+    return this.sub(BigInt.fromUInt16(b));
+  }
+
+  // MUTATES
+  private mulInt(b: u32): BigInt {
+    this.grow(this.n + 1);
+    let r: u32 = 0;
+    for (let i = 0; i < this.n; i++) {
+      let rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
+      this.d[i] = <u32>(rr & <u64>BigInt.digitMask);
+      r = <u32>(rr >> BigInt.p);
+    }
+    if (r != 0) {
+      this.d[this.n++] = r;
     }
     return this;
   }
+
+  // MUTATES
+  private divInt(b: u16): BigInt {
+    if (b == 0) throw new Error("Divide by zero");
+    // try optimizations
+    if (b == 1 || this.n == 0) return this;
+    const pow2Bit: i32 = BigInt.isPow2(b);
+    if (pow2Bit != 0) return this.divPowTwo(pow2Bit);
+    // divide
+    let r: u64 = 0;
+    let val: u32;
+    for (let i = this.n - 1; i >= 0; i--) {
+      r = r << BigInt.p | <u64>this.d[i];
+      if (r >= b) {
+        val = <u32>(r / b);
+        r -= <u64>val * <u64>b;
+      } else {
+        val = 0;
+      }
+      this.d[i] = val;
+    }
+    this.trimLeadingZeros();
+    return this;
+  }
+
+  modInt(b: u32): u32 {
+    if (b == 0) throw new Error("Divide by zero");
+    // try optimizations
+    if (b == 1 || this.n == 0) {
+      return 0;
+    }
+    const pow2Bit: i32 = BigInt.isPow2(b);
+    if (pow2Bit != 0) {
+      return this.d[0] & ((<u32>pow2Bit << 1) - <u32>1);
+    }
+    // divide
+    let q: BigInt = BigInt.getEmptyResultContainer(this.n, this.isNeg, this.n);
+    let r: u64 = 0;
+    let val: u32;
+    for (let i = this.n - 1; i >= 0; i--) {
+      r = r << BigInt.p | <u64>this.d[i];
+      if (r >= b) {
+        val = <u32>(r / b);
+        r -= <u64>val * <u64>b;
+      } else {
+        val = 0;
+      }
+      q.d[i] = val;
+    }
+    return <u32>r;
+  }
+
+  // UTILITY ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  countBits(): i32 {
+    if (this.n == 0) return 0;
+    // initialize to bits in fully used digits
+    let bits: i32 = (this.n - 1) * BigInt.p;
+    // count bits used in most significant digit
+    let q: u32 = this.d[this.n - 1];
+    while (q > 0) {
+      ++bits;
+      q >>= 1;
+    }
+    return bits;
+  }
+
+  private static isPow2(b: u32): i32 {
+    let i: i32 = 1;
+    for (; i < BigInt.p; i++) {
+      if (b == <u32>1 << i) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
 }
