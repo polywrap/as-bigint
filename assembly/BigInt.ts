@@ -864,6 +864,14 @@ export class BigInt {
 
   // SYNTACTIC SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+  get ZERO(): BigInt {
+    return BigInt.fromUInt16(0);
+  };
+
+  get ONE(): BigInt {
+    return BigInt.fromUInt16(1);
+  };
+
   static eq(left: BigInt, right: BigInt): boolean {
     return left.eq(right);
   }
