@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/web3-api/BigInt.git"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "types": "assembly/index.ts",
   "releaseFiles": [
     "assembly/",
@@ -21,8 +21,8 @@
     "reset": "yarn clean && yarn && yarn build",
     "clean": "rimraf ./node_modules ./build ./**/coverage",
     "build": "yarn build:optimized",
-    "build:untouched": "asc assembly/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target debug",
-    "build:optimized": "asc assembly/BigInt.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
+    "build:untouched": "asc assembly/index.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target debug",
+    "build:optimized": "asc assembly/index.ts -o ./build/BigInt.wasm -d ./build/BigInt.d.ts --target release",
     "test": "asp --verbose",
     "test:ci": "asp --summary",
     "lint": "yarn eslint",

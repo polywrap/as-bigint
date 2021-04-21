@@ -31,7 +31,7 @@ describe("Algebraic operations", () => {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const x = BigInt.fromString(testCase.x);
-      const actual = x.pow(3);
+      const actual = x.pow(<i32>3);
       const expected = testCase.xCube;
       expect(actual.toString()).toStrictEqual(expected);
     }
@@ -42,7 +42,7 @@ describe("Algebraic operations", () => {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const x = BigInt.fromString(testCase.x);
-      const actualSquare = x.pow(2);
+      const actualSquare = x.pow(<i32>2);
       const expectedSquare = testCase.xSquare;
       expect(actualSquare.toString()).toStrictEqual(expectedSquare);
       const actualRoot = actualSquare.sqrt();
@@ -60,7 +60,7 @@ describe("Algebraic operations", () => {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const y = BigInt.fromString(testCase.y);
-      const actualQuad = y.pow(4);
+      const actualQuad = y.pow(<i32>4);
       const expectedQuad= testCase.yQuad;
       expect(actualQuad.toString()).toStrictEqual(expectedQuad);
       const actualRoot = actualQuad.sqrt().sqrt();

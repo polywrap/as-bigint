@@ -1,4 +1,5 @@
 
+// multiple precision integer
 export class BigInt {
 
   private d: Uint32Array; // digits
@@ -10,7 +11,7 @@ export class BigInt {
 
   private static readonly q: i32 = 2;
   private static readonly p: i32 = 28; // bits used in digit
-  private static readonly b: u32 = BigInt.q ** BigInt.p; // digit basis
+  // private static readonly b: u32 = BigInt.q ** BigInt.p; // digit basis
   private static readonly actualBits: i32 = 32; // bits available in type (single precision)
   // private static readonly doubleActualBits: i32 = 64 // 2 * BigIntMP.actualBits -> "double precision" actual bits
   private static readonly maxComba: i32 = 256 // 2^(doubleActualBits - 2 * p) = 2^8 = 256
@@ -43,7 +44,7 @@ export class BigInt {
       if (val >= radixU) {
         throw new RangeError("Character " + bigInteger.charAt(i) + " is not supported for radix " + radix.toString());
       }
-      res = res.mulInt(radixU).addInt(val);
+      res = res.inplaceMulInt(radixU).addInt(val);
     }
     res.isNeg = isNegative;
     res.trimLeadingZeros();
@@ -156,10 +157,10 @@ export class BigInt {
     let t: BigInt = this.abs();
     const zero: BigInt = BigInt.fromUInt16(0);
     const codes: i32[] = [];
-    const radixU: u16 = <u16>radix;
+    const radixU: u32 = <u32>radix;
     while (t.ne(zero)) {
       const d: i32 = <i32>(t.modInt(radixU));
-      t = t.divInt(radixU);
+      t = t.inplaceDivInt(radixU);
       codes.push(d + 48);
     }
     codes.reverse();
@@ -174,17 +175,9 @@ export class BigInt {
     return this.compareTo(other) == 0;
   }
 
-  static eq(left: BigInt, right: BigInt): boolean {
-    return left.eq(right);
-  }
-
   @operator("!=")
   ne(other: BigInt): boolean {
     return !this.eq(other);
-  }
-
-  static ne(left: BigInt, right: BigInt): boolean {
-    return left.ne(right);
   }
 
   @operator("<")
@@ -192,17 +185,9 @@ export class BigInt {
     return this.compareTo(other) < 0;
   }
 
-  static lt(left: BigInt, right: BigInt): boolean {
-    return left.lt(right);
-  }
-
   @operator("<=")
   lte(other: BigInt): boolean {
     return this.compareTo(other) <= 0;
-  }
-
-  static lte(left: BigInt, right: BigInt): boolean {
-    return left.lte(right);
   }
 
   @operator(">")
@@ -210,17 +195,9 @@ export class BigInt {
     return this.compareTo(other) > 0;
   }
 
-  static gt(left: BigInt, right: BigInt): boolean {
-    return left.gt(right);
-  }
-
   @operator(">=")
   gte(other: BigInt): boolean {
     return this.compareTo(other) >= 0;
-  }
-
-  static gte(left: BigInt, right: BigInt): boolean {
-    return left.gte(right);
   }
 
   compareTo(other: BigInt): i32 {
@@ -407,6 +384,7 @@ export class BigInt {
 
   // multiply by power of 2
   // O(2N)
+  @operator("<<")
   mulPowTwo(k: i32): BigInt {
     if (k <= 0) {
       return this.copy();
@@ -436,6 +414,7 @@ export class BigInt {
   }
 
   // divide by power of 2
+  @operator(">>")
   divPowTwo(k: i32): BigInt {
     const res = this.copy();
     if (k == 0) {
@@ -554,9 +533,13 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  pow(exponent: u32): BigInt {
+  @operator("**")
+  pow(exponent: i32): BigInt {
+    if (exponent < 0) {
+      throw new RangeError("BigInt does not support negative exponentiation");
+    }
     let res: BigInt = this.copy();
-    for (let i: u32 = 1; i < exponent; i++) {
+    for (let i = 1; i < exponent; i++) {
       res = res.mul(this.copy());
     }
     return res;
@@ -677,7 +660,7 @@ export class BigInt {
   //   return q;
   // }
 
-  _slowDiv(other: BigInt): BigInt {
+  private _slowDiv(other: BigInt): BigInt {
     if (other.eq(BigInt.fromUInt16(0))) {
       throw new Error("Divide by zero");
     }
@@ -750,8 +733,22 @@ export class BigInt {
     return this.sub(BigInt.fromUInt16(b));
   }
 
+  mulInt(b: u32): BigInt {
+    const res = BigInt.fromDigits(this.d, this.isNeg, this.n, this.n + 1);
+    let r: u32 = 0;
+    for (let i = 0; i < this.n; i++) {
+      let rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
+      res.d[i] = <u32>(rr & <u64>BigInt.digitMask);
+      r = <u32>(rr >> BigInt.p);
+    }
+    if (r != 0) {
+      res.d[res.n++] = r;
+    }
+    return res;
+  }
+
   // MUTATES
-  private mulInt(b: u32): BigInt {
+  private inplaceMulInt(b: u32): BigInt {
     this.grow(this.n + 1);
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
@@ -765,8 +762,32 @@ export class BigInt {
     return this;
   }
 
+  divInt(b: u32): BigInt {
+    if (b == 0) throw new Error("Divide by zero");
+    // try optimizations
+    if (b == 1 || this.n == 0) return this.copy();
+    const pow2Bit: i32 = BigInt.isPow2(b);
+    if (pow2Bit != 0) return this.divPowTwo(pow2Bit);
+    // divide
+    const res = this.copy();
+    let r: u64 = 0;
+    let val: u32;
+    for (let i = this.n - 1; i >= 0; i--) {
+      r = r << BigInt.p | <u64>this.d[i];
+      if (r >= b) {
+        val = <u32>(r / b);
+        r -= <u64>val * <u64>b;
+      } else {
+        val = 0;
+      }
+      res.d[i] = val;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
   // MUTATES
-  private divInt(b: u16): BigInt {
+  private inplaceDivInt(b: u32): BigInt {
     if (b == 0) throw new Error("Divide by zero");
     // try optimizations
     if (b == 1 || this.n == 0) return this;
@@ -839,6 +860,56 @@ export class BigInt {
       }
     }
     return 0;
+  }
+
+  // SYNTACTIC SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+  static eq(left: BigInt, right: BigInt): boolean {
+    return left.eq(right);
+  }
+
+  static ne(left: BigInt, right: BigInt): boolean {
+    return left.ne(right);
+  }
+
+  static lt(left: BigInt, right: BigInt): boolean {
+    return left.lt(right);
+  }
+
+  static lte(left: BigInt, right: BigInt): boolean {
+    return left.lte(right);
+  }
+
+  static gt(left: BigInt, right: BigInt): boolean {
+    return left.gt(right);
+  }
+
+  static gte(left: BigInt, right: BigInt): boolean {
+    return left.gte(right);
+  }
+
+  static add(left: BigInt, right: BigInt): BigInt {
+    return left.add(right);
+  }
+
+  static sub(left: BigInt, right: BigInt): BigInt {
+    return left.sub(right);
+  }
+
+  static mul(left: BigInt, right: BigInt): BigInt {
+    return left.mul(right);
+  }
+
+  static pow(base: BigInt, k: i32): BigInt {
+    return base.pow(k);
+  }
+
+  static div(left: BigInt, right: BigInt): BigInt {
+    return left.div(right);
+  }
+
+  static mod(left: BigInt, right: BigInt): BigInt {
+    return left.mod(right);
   }
 
 }
