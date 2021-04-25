@@ -862,6 +862,10 @@ export class BigInt {
     return 0;
   }
 
+  isZero(): boolean {
+    return this.n == 0;
+  }
+
   // SYNTACTIC SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   static get ZERO(): BigInt {
