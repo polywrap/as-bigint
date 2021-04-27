@@ -93,3 +93,16 @@ describe("Constructor exceptions", () => {
   });
 
 });
+
+describe("radix N read and write", () => {
+
+  // 0x9F59E5Ed123C10D57E92629612511b14628D2799
+
+  it("reads and writes radix 16 (hex) strings", () => {
+    const radixString = "9F59E5Ed123C10D57E92629612511b14628D2799";
+    const bi = BigInt.fromString(radixString, 16);
+    expect(bi.toString()).toStrictEqual("909734328268297026340529402491323712408491206553");
+    expect(bi.toString(16)).toStrictEqual(radixString.toLowerCase());
+  });
+
+});

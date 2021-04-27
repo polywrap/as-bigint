@@ -9,7 +9,7 @@ export class BigInt {
     return this.isNeg;
   }
 
-  private static readonly q: i32 = 2;
+  // private static readonly q: i32 = 2;
   private static readonly p: i32 = 28; // bits used in digit
   // private static readonly b: u32 = BigInt.q ** BigInt.p; // digit basis
   private static readonly actualBits: i32 = 32; // bits available in type (single precision)
@@ -28,8 +28,8 @@ export class BigInt {
   }
 
   static fromString(bigInteger: string, radix: i32 = 10): BigInt {
-    if (radix < 2 || radix > 10) {
-      throw new RangeError("BigInt only reads strings of radix 2 through 10");
+    if (radix < 2 || radix > 16) {
+      throw new RangeError("BigInt only reads strings of radix 2 through 16");
     }
     let i: i32 = 0;
     let isNegative: boolean = false;
@@ -40,8 +40,15 @@ export class BigInt {
     let res: BigInt = BigInt.fromUInt16(0);
     const radixU: u16 = <u16>radix;
     for (; i < bigInteger.length; i++) {
-      let val: u16 = <u16>(bigInteger.charCodeAt(i) - 48);
-      if (val >= radixU) {
+      const code: i32 = bigInteger.charCodeAt(i);
+      let val: u16;
+      if (code >= 48 && code <= 57) {
+        val = <u16>(code - 48);
+      } else if (code >= 65 && code <= 70) {
+        val = <u16>(code - 55);
+      } else if (code >= 97 && code <= 102) {
+        val = <u16>(code - 87);
+      } else {
         throw new RangeError("Character " + bigInteger.charAt(i) + " is not supported for radix " + radix.toString());
       }
       res = res.inplaceMulInt(radixU).addInt(val);
@@ -149,8 +156,8 @@ export class BigInt {
   // STRING OUTPUT /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   toString(radix: i32 = 10): string {
-    if (radix < 2 || radix > 10) {
-      throw new RangeError("BigInt only prints strings in radix 2 through 10");
+    if (radix < 2 || radix > 16) {
+      throw new RangeError("BigInt only prints strings in radix 2 through 16");
     }
     if (this.n == 0) return "0";
     let res: string = this.isNeg ? "-" : "";
@@ -159,9 +166,13 @@ export class BigInt {
     const codes: i32[] = [];
     const radixU: u32 = <u32>radix;
     while (t.ne(zero)) {
-      const d: i32 = <i32>(t.modInt(radixU));
+      const d: i32 = <i32>t.modInt(radixU);
       t = t.inplaceDivInt(radixU);
-      codes.push(d + 48);
+      if (d < 10) {
+        codes.push(d + 48);
+      } else {
+        codes.push(d + 87);
+      }
     }
     codes.reverse();
     res += String.fromCharCodes(codes);
@@ -818,7 +829,7 @@ export class BigInt {
     }
     const pow2Bit: i32 = BigInt.isPow2(b);
     if (pow2Bit != 0) {
-      return this.d[0] & ((<u32>pow2Bit << 1) - <u32>1);
+      return this.d[0] & ((<u32>1 << pow2Bit) - <u32>1);
     }
     // divide
     let q: BigInt = BigInt.getEmptyResultContainer(this.n, this.isNeg, this.n);
@@ -853,9 +864,8 @@ export class BigInt {
   }
 
   private static isPow2(b: u32): i32 {
-    let i: i32 = 1;
-    for (; i < BigInt.p; i++) {
-      if (b == <u32>1 << i) {
+    for (let i = 1; i < BigInt.p; i++) {
+      if (b == (<u32>1 << i)) {
         return i;
       }
     }
