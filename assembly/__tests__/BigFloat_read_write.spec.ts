@@ -141,4 +141,47 @@ describe("BigFloat construction from fractions", () => {
     expect(bigFloat.toString()).toStrictEqual("0");
   });
 
+  it("Constructs from fraction based on random numbers", () => {
+    for (let i = 0; i < 100; i++) {
+      const numeratorFloat: f64 = Math.random();
+      const denominatorFloat: f64 = Math.random();
+      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
+      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
+      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
+      const actualDiv: BigFloat = numerator.div(denominator);
+      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const numeratorFloat: f64 = Math.random() * F64.MAX_VALUE;
+      const denominatorFloat: f64 = Math.random() * F64.MAX_VALUE;
+      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
+      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
+      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
+      const actualDiv: BigFloat = numerator.div(denominator);
+      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const numeratorFloat: f64 = Math.random() * F64.MAX_VALUE;
+      const denominatorFloat: f64 = Math.random();
+      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
+      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
+      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
+      const actualDiv: BigFloat = numerator.div(denominator);
+      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const numeratorFloat: f64 = Math.random();
+      const denominatorFloat: f64 = Math.random() * F64.MAX_VALUE;
+      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
+      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
+      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
+      const actualDiv: BigFloat = numerator.div(denominator);
+      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
+    }
+
+  });
+
 });
