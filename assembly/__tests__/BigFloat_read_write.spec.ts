@@ -1,6 +1,7 @@
 import {BigFloat} from "../BigFloat";
 import {BigInt} from "../BigInt";
 
+
 describe("BigFloat reads and writes strings", () => {
 
   it("Constructs from radix 10 string", () => {
@@ -13,8 +14,8 @@ describe("BigFloat reads and writes strings", () => {
       "3259235823280734598273407234235353125134634513523513451235325.234231",
       "-3257235.2305829",
       "-0.3252352",
-      "3257235",
-      "-3257235",
+      "3257235.0",
+      "-3257235.0",
     ]
     for (let i = 0; i < arr.length; i++) {
       const str: string = arr[i];
@@ -46,7 +47,7 @@ describe("BigFloat reads and writes strings", () => {
 
     const str6 = "00000325723500000";
     bigFloat = BigFloat.fromString(str6);
-    expect(bigFloat.toString()).toStrictEqual("325723500000");
+    expect(bigFloat.toString()).toStrictEqual("325723500000.0");
 
     const str7 = "-.0000454";
     bigFloat = BigFloat.fromString(str7);
@@ -97,7 +98,7 @@ describe("BigFloat construction from fractions", () => {
 
     numerator = BigInt.fromString("23424380928348632480682093860823085208340453452435323");
     denominator = BigInt.fromString("72865876238658638264726476289309837508973984705983743");
-    bigFloat = BigFloat.fromFraction(numerator, denominator, 24);
+    bigFloat = BigFloat.fromFraction(numerator, denominator);
     expect(bigFloat.toString(24)).toStrictEqual("0.321472575882110101595481");
 
     numerator = BigInt.fromString("72865876238658638264726476289309837508973984705983743");
@@ -117,7 +118,7 @@ describe("BigFloat construction from fractions", () => {
 
     numerator = BigInt.fromString("-35352347978987");
     denominator = BigInt.fromString("899732432");
-    bigFloat = BigFloat.fromFraction(numerator, denominator, 29);
+    bigFloat = BigFloat.fromFraction(numerator, denominator);
     expect(bigFloat.toString(29)).toStrictEqual("-39292.06808784569855318942198584656");
 
     numerator = BigInt.fromString("-35352347978987");
@@ -127,61 +128,18 @@ describe("BigFloat construction from fractions", () => {
 
     numerator = BigInt.fromString("23627");
     denominator = BigInt.fromString("1093746923469083704986");
-    bigFloat = BigFloat.fromFraction(numerator, denominator, 30);
+    bigFloat = BigFloat.fromFraction(numerator, denominator);
     expect(bigFloat.toString(30)).toStrictEqual("0.000000000000000021601889333833");
 
     numerator = BigInt.fromString("0003452356198560913");
     denominator = BigInt.fromString("3409689346177541");
-    bigFloat = BigFloat.fromFraction(numerator, denominator, 30);
+    bigFloat = BigFloat.fromFraction(numerator, denominator);
     expect(bigFloat.toString(30)).toStrictEqual("1.012513413408527674142557088016");
 
     numerator = BigInt.fromString("0");
     denominator = BigInt.fromString("-899732432868687887");
     bigFloat = BigFloat.fromFraction(numerator, denominator);
     expect(bigFloat.toString()).toStrictEqual("0");
-  });
-
-  it("Constructs from fraction based on random numbers", () => {
-    for (let i = 0; i < 100; i++) {
-      const numeratorFloat: f64 = Math.random();
-      const denominatorFloat: f64 = Math.random();
-      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
-      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
-      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
-      const actualDiv: BigFloat = numerator.div(denominator);
-      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
-    }
-
-    for (let i = 0; i < 100; i++) {
-      const numeratorFloat: f64 = Math.random() * F64.MAX_VALUE;
-      const denominatorFloat: f64 = Math.random() * F64.MAX_VALUE;
-      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
-      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
-      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
-      const actualDiv: BigFloat = numerator.div(denominator);
-      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
-    }
-
-    for (let i = 0; i < 100; i++) {
-      const numeratorFloat: f64 = Math.random() * F64.MAX_VALUE;
-      const denominatorFloat: f64 = Math.random();
-      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
-      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
-      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
-      const actualDiv: BigFloat = numerator.div(denominator);
-      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
-    }
-
-    for (let i = 0; i < 100; i++) {
-      const numeratorFloat: f64 = Math.random();
-      const denominatorFloat: f64 = Math.random() * F64.MAX_VALUE;
-      const expectedDiv: f64 = numeratorFloat / denominatorFloat;
-      const numerator: BigFloat = BigFloat.fromString(numeratorFloat.toString());
-      const denominator: BigFloat = BigFloat.fromString(denominatorFloat.toString());
-      const actualDiv: BigFloat = numerator.div(denominator);
-      expect(actualDiv.toString(16)).toStrictEqual(expectedDiv.toString());
-    }
-
   });
 
 });

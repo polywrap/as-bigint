@@ -744,6 +744,7 @@ export class BigInt {
     return this.sub(BigInt.fromUInt16(b));
   }
 
+  // TODO: can overflow if argument b is too large; 10**8 is okay but 10**9 sometimes overflows
   mulInt(b: u32): BigInt {
     const res = BigInt.fromDigits(this.d, this.isNeg, this.n, this.n + 1);
     let r: u32 = 0;

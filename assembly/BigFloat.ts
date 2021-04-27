@@ -4,25 +4,23 @@ import { BigInt } from "./BigInt";
 export class BigFloat {
 
   // a float takes the form -> m * 10^e
-  private mantissa: BigInt;
+  public mantissa: BigInt;
   private e: i32;
-  minPrecision: i32;
 
   // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(mantissa: BigInt, exponent: i32, minPrecision: i32 = 18) {
+  constructor(mantissa: BigInt, exponent: i32) {
     this.mantissa = mantissa;
     this.e = exponent;
-    this.minPrecision = minPrecision;
   }
 
-  static fromFraction(numerator: BigInt, denominator: BigInt, minPrecision: i32 = 18): BigFloat {
-    const floatNumerator = new BigFloat(numerator, numerator.toString().length, minPrecision);
-    const floatDenominator = new BigFloat(denominator, denominator.toString().length);
+  static fromFraction(numerator: BigInt, denominator: BigInt): BigFloat {
+    const floatNumerator = new BigFloat(numerator, 0);
+    const floatDenominator = new BigFloat(denominator, 0);
     return floatNumerator.div(floatDenominator);
   }
 
-  static fromString(bigFloat: string, minPrecision: i32 = 18): BigFloat {
+  static fromString(bigFloat: string): BigFloat {
     // determine sign
     let isNegative: boolean = bigFloat.charAt(0) == "-";
     if (isNegative) bigFloat = bigFloat.substring(1);
@@ -34,29 +32,24 @@ export class BigFloat {
     const i: i32 = bigFloat.indexOf(".");
     if (i == -1) {
       mantissa = BigInt.fromString(isNegative ? "-" + bigFloat : bigFloat);
-      exponent = mantissa.isZero() ? 0 : mantissa.toString().length;
+      exponent = 0;
     } else {
       preDecimal = BigFloat.trimLeadingZeros(bigFloat.substring(0, i));
       let postDecimalStr: string = bigFloat.substring(i + 1);
-      let postDecimalTrim = BigFloat.trimLeadingZeros(postDecimalStr);
-      if (preDecimal == "") {
-        exponent = 0 - (postDecimalStr.length - postDecimalTrim.length);
-      } else {
-        exponent = preDecimal.length;
-      }
       postDecimal = BigFloat.trimTrailingZeros(postDecimalStr);
+      exponent = -1 * postDecimal.length;
       if (isNegative) {
         preDecimal = "-" + preDecimal;
       }
       mantissa = BigInt.fromString(preDecimal + postDecimal);
     }
-    return new BigFloat(mantissa, exponent, minPrecision);
+    return new BigFloat(mantissa, exponent);
   }
 
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  toString(precision: i32 = this.minPrecision): string {
-    if (this.mantissa.isZero() || this.e <= 0 && precision == 0) {
+  toString(precision: i32 = 18): string {
+    if (this.mantissa.isZero()) {
       return "0";
     }
     let m: string = this.mantissa.toString();
@@ -65,15 +58,25 @@ export class BigFloat {
       result += "-";
       m = m.substring(1);
     }
-    if (this.e <= 0) {
-      result += "0.";
-      result = result.padEnd(result.length + -1 * this.e, "0");
-      result += BigFloat.trimTrailingZeros(m.substr(0, precision + this.e));
+    if (this.e > 0) {
+      result = result.padEnd(m.length + this.e, "0");
+      if (precision > 0) {
+        result += ".0"
+      }
+    } else if (this.e + m.length <= 0) {
+      if (precision == 0 || this.e + m.length <= -1 * precision) {
+        return "0"
+      }
+      result += "0."
+      m = m.padStart(-1 * this.e, "0");
+      m = m.substr(0, precision);
+      result += m;
     } else {
-      result += m.substring(0, this.e);
-      const postDecimal: string = m.substr(this.e, precision);
-      if (postDecimal.length > 0) {
-        result += "." + postDecimal;
+      result += m.substring(0, m.length + this.e);
+      if (precision > 0) {
+        const postDecimal: string = m.substr(m.length + this.e, precision);
+        result += ".";
+        result += postDecimal.length > 0 ? postDecimal : "0";
       }
     }
     return result;
@@ -105,7 +108,7 @@ export class BigFloat {
 
   private static mulBigIntPowTen(mantissa: BigInt, k: i32): BigInt {
     while (k > 0) {
-      const mulVal: i32 = k > 9 ? 9 : k;
+      const mulVal: i32 = k > 8 ? 8 : k;
       mantissa = mantissa.mulInt(10 ** mulVal);
       k -= mulVal;
     }
@@ -117,58 +120,50 @@ export class BigFloat {
   add(other: BigFloat): BigFloat {
     let left: BigInt = this.mantissa;
     let right: BigInt = other.mantissa;
-    let exponent: i32 = this.e;
-    let eDiff: i32 = this.e - other.e;
-    if (eDiff > 0) {
-      right = BigFloat.mulBigIntPowTen(right, eDiff);
-    } else if (eDiff < 0) {
-      left = BigFloat.mulBigIntPowTen(left, -1 * eDiff);
-      exponent += eDiff;
+    let exponent: i32;
+    if (this.e >= other.e) {
+      left = BigFloat.mulBigIntPowTen(left, this.e - other.e);
+      exponent = other.e;
+    } else {
+      right = BigFloat.mulBigIntPowTen(right, other.e - this.e);
+      exponent = this.e;
     }
-    return new BigFloat(left.add(right), exponent, this.minPrecision);
+    return new BigFloat(left.add(right), exponent);
   }
 
   sub(other: BigFloat): BigFloat {
     let left: BigInt = this.mantissa;
     let right: BigInt = other.mantissa;
-    let exponent: i32 = this.e;
-    let eDiff: i32 = this.e - other.e;
-    if (eDiff > 0) {
-      right = BigFloat.mulBigIntPowTen(right, eDiff);
-    } else if (eDiff < 0) {
-      left = BigFloat.mulBigIntPowTen(left, -1 * eDiff);
-      exponent += eDiff;
+    let exponent: i32;
+    if (this.e >= other.e) {
+      left = BigFloat.mulBigIntPowTen(left, this.e - other.e);
+      exponent = other.e;
+    } else {
+      right = BigFloat.mulBigIntPowTen(right, other.e - this.e);
+      exponent = this.e;
     }
-    return new BigFloat(left.sub(right), exponent, this.minPrecision);
+    return new BigFloat(left.sub(right), exponent);
   }
 
   mul(other: BigFloat): BigFloat {
     const mantissa: BigInt = this.mantissa.mul(other.mantissa);
     const exponent: i32 = this.e + other.e;
-    return new BigFloat(mantissa, exponent, this.minPrecision);
+    return new BigFloat(mantissa, exponent);
   }
 
-  div(other: BigFloat, minPrecision: i32 = this.minPrecision): BigFloat {
-    let dividend = this.mantissa;
-    let divisor = other.mantissa;
-    // divide with padding to maintain precision
-    let dividendLength = dividend.toString().length - (dividend.isNegative ? 1 : 0);
-    let divisorLength = divisor.toString().length - (divisor.isNegative ? 1 : 0);
-    const lengthDiff = dividendLength - divisorLength;
-    const padding = minPrecision - (lengthDiff < 0 ? lengthDiff : 0);
+  div(other: BigFloat, minPrecision: i32 = 32): BigFloat {
+    let dividend: BigInt = this.mantissa;
+    let divisor: BigInt = other.mantissa;
+    // add padding used to maintain precision
+    const dividendLen = dividend.isNegative ? dividend.toString().length - 1 : dividend.toString().length;
+    const divisorLen = divisor.isNegative ? divisor.toString().length - 1 : divisor.toString().length;
+    const sizeDiff: i32 = dividendLen - divisorLen > 0 ? 0 : divisorLen - dividendLen;
+    const padding: i32 = minPrecision + sizeDiff;
     dividend = BigFloat.mulBigIntPowTen(dividend, padding);
+    // divide
     const mantissa: BigInt = dividend.div(divisor);
-    // calculate exponent
-    let exponent: i32;
-    const gteZero: boolean = this.mantissa.magCompareTo(other.mantissa) >= 0;
-    if (gteZero) {
-      const naiveDiv: BigInt = this.mantissa.div(other.mantissa);
-      const naiveDivLen: i32 = naiveDiv.toString().length;
-      exponent = naiveDiv.isNegative ? naiveDivLen - 1 : naiveDivLen;
-    } else {
-      exponent = this.e - other.e;
-    }
-    return new BigFloat(mantissa, exponent, this.minPrecision);
+    const exponent: i32 = this.e - other.e - padding;
+    return new BigFloat(mantissa, exponent);
   }
 
 
@@ -179,7 +174,7 @@ export class BigFloat {
   }
 
   copy(): BigFloat {
-    return new BigFloat(this.mantissa.copy(), this.e, this.minPrecision);
+    return new BigFloat(this.mantissa.copy(), this.e);
   }
 
 }
