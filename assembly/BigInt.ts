@@ -746,6 +746,9 @@ export class BigInt {
 
   // TODO: can overflow if argument b is too large; 10**8 is okay but 10**9 sometimes overflows
   mulInt(b: u32): BigInt {
+    if (b > 268435456) {
+      throw new Error("mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)")
+    }
     const res = BigInt.fromDigits(this.d, this.isNeg, this.n, this.n + 1);
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
@@ -761,6 +764,9 @@ export class BigInt {
 
   // MUTATES
   private inplaceMulInt(b: u32): BigInt {
+    if (b > 268435456) {
+      throw new Error("mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)")
+    }
     this.grow(this.n + 1);
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
