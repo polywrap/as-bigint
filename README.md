@@ -123,6 +123,10 @@ Cryptographic algorithms | Implement functions used for cryptography (e.g., Grea
 To autofix lint errors:
 `yarn lint:fix`
 
+## Handling decimal numbers
+
+If you need to work with arbitrarily large decimal numbers, check out as-bigfloat: https://github.com/Web3-API/as-bigfloat. The BigFloat class is built on top of the BigInt and is still in development. Only the fromString, fromFraction, toString, toFixed, toSignificant, and div (division) functions have been thoroughly tested.
+
 ## Acknowledgements
 
 Web3API developed BigInt to use in the development tools we produce for fast, language-agnostic decentralized API development. Web3api allows developers to interact with any web3 protocol from any language, making between-protocol composition easy. Learn more at https://web3api.dev/.
