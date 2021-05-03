@@ -80,9 +80,9 @@ const stillSmall: BigInt = BigInt.fromUInt64(18446744073709551615);
 ```
 
 ## Development Status & Roadmap
+![CI](https://github.com/Web3-API/as-bigint/actions/workflows/ci.yaml/badge.svg?branch=main)
 
 ### Current Status
-![CI](https://github.com/Web3-API/as-bigint/actions/workflows/ci.yaml/badge.svg?branch=main)
 Operation | Tests | Optimization
 --- | --- | ---
 Addition | Implemented | Complete
