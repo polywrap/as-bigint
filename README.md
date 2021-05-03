@@ -82,16 +82,16 @@ const stillSmall: BigInt = BigInt.fromUInt64(18446744073709551615);
 ## Development Status & Roadmap
 
 ### Current Status
-
+![All tests](https://github.com/Web3-API/as-bigint/actions/workflows/ci.yaml/badge.svg?branch=main)
 Operation | Tests | Optimization
 --- | --- | ---
-Addition | Passing | Complete
-Subtraction | Passing | Complete
-Multiplication | Passing | Up to ~1,500 bit numbers
-Exponentiation | Passing | Incomplete
-Division | Passing | Incomplete
-Remainder | Passing | Incomplete
-Square root | Passing | Incomplete
+Addition | Implemented | Complete
+Subtraction | Implemented | Complete
+Multiplication | Implemented | Up to ~1,500 bit numbers
+Exponentiation | Implemented | Incomplete
+Division | Implemented | Incomplete
+Remainder | Implemented | Incomplete
+Square root | Implemented | Incomplete
 Modular reduction | N/A | Not implemented
 Random number generation | N/A | Not implemented
 Cryptographic functions | N/A | Not implemented
