@@ -125,7 +125,7 @@ To autofix lint errors:
 
 ## Handling decimal numbers
 
-If you need to work with arbitrarily large decimal numbers, check out as-bigfloat: https://github.com/Web3-API/as-bigfloat. The BigFloat class is built on top of the BigInt and is still in development. Only the fromString, fromFraction, toString, toFixed, toSignificant, and div (division) functions have been thoroughly tested.
+If you need to work with arbitrarily large decimal numbers, check out as-bigfloat: https://github.com/Web3-API/as-bigfloat. The BigFloat class is built on top of BigInt, is not otherwise performance-optimized, and is still in development. Only the fromString, fromFraction, toString, toFixed, toSignificant, and div (division) functions have been thoroughly tested.
 
 ## Acknowledgements
 
