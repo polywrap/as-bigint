@@ -123,5 +123,12 @@ Cryptographic algorithms | Implement functions used for cryptography (e.g., Grea
 To autofix lint errors:
 `yarn lint:fix`
 
+## Acknowledgements
+
+Web3API funded development of BigInt to use in our development tools for fast, language-agnostic decentralized API development. Web3api allows developers to interact with any web3 protocol from any language, making between-protocol composition is easy. Learn more at web3api.dev.
+
+The BigInt method implementations are largely based on *BigNum Math: Implementing Cryptographic Multiple Precision Arithmetic 1st Edition*
+by Tom St Denis.
+
 ## Contact
 Please create an issue in this repository or email kris@dorg.tech
