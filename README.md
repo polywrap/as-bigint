@@ -125,7 +125,7 @@ To autofix lint errors:
 
 ## Acknowledgements
 
-Web3API funded development of BigInt to use in our development tools for fast, language-agnostic decentralized API development. Web3api allows developers to interact with any web3 protocol from any language, making between-protocol composition is easy. Learn more at web3api.dev.
+Web3API developed BigInt to use in the development tools we produce for fast, language-agnostic decentralized API development. Web3api allows developers to interact with any web3 protocol from any language, making between-protocol composition easy. Learn more at https://web3api.dev/.
 
 The BigInt method implementations are largely based on *BigNum Math: Implementing Cryptographic Multiple Precision Arithmetic 1st Edition*
 by Tom St Denis.
