@@ -1,7 +1,5 @@
-
 // multiple precision integer
 export class BigInt {
-
   private d: Uint32Array; // digits
   private n: i32 = 0; // digits used
   private isNeg: boolean; // sign
@@ -14,15 +12,19 @@ export class BigInt {
   // private static readonly b: u32 = BigInt.q ** BigInt.p; // digit basis
   private static readonly actualBits: i32 = 32; // bits available in type (single precision)
   // private static readonly doubleActualBits: i32 = 64 // 2 * BigIntMP.actualBits -> "double precision" actual bits
-  private static readonly maxComba: i32 = 256 // 2^(doubleActualBits - 2 * p) = 2^8 = 256
+  private static readonly maxComba: i32 = 256; // 2^(doubleActualBits - 2 * p) = 2^8 = 256
 
-  private static readonly digitMask: u32 = ((<u32>1) << <u32>BigInt.p) - (<u32>1); // mask p least significant bits
+  private static readonly digitMask: u32 =
+    ((<u32>1) << (<u32>BigInt.p)) - <u32>1; // mask p least significant bits
 
   private static readonly precision: i32 = 5; // base array size fits 140 bit integers
 
   // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private constructor(size: i32 = BigInt.precision, isNegative: boolean = false) {
+  private constructor(
+    size: i32 = BigInt.precision,
+    isNegative: boolean = false
+  ) {
     this.d = new Uint32Array(size);
     this.isNeg = isNegative;
   }
@@ -49,7 +51,12 @@ export class BigInt {
       } else if (code >= 97 && code <= 102) {
         val = <u16>(code - 87);
       } else {
-        throw new RangeError("Character " + bigInteger.charAt(i) + " is not supported for radix " + radix.toString());
+        throw new RangeError(
+          "Character " +
+            bigInteger.charAt(i) +
+            " is not supported for radix " +
+            radix.toString()
+        );
       }
       res = res.inplaceMulInt(radixU).add(BigInt.fromUInt16(val));
     }
@@ -60,7 +67,7 @@ export class BigInt {
 
   static fromUInt16(digit: u16): BigInt {
     const res = new BigInt(BigInt.precision, false);
-    res.d[0] = <u32>digit & BigInt.digitMask;
+    res.d[0] = (<u32>digit) & BigInt.digitMask;
     res.n = res.d[0] != 0 ? 1 : 0;
     return res;
   }
@@ -81,7 +88,7 @@ export class BigInt {
     const res = new BigInt(BigInt.precision, false);
     let i = 0;
     while (digit != 0) {
-      res.d[i++] = <u32>digit & BigInt.digitMask;
+      res.d[i++] = (<u32>digit) & BigInt.digitMask;
       digit >>= BigInt.p;
     }
     res.n = i;
@@ -90,7 +97,12 @@ export class BigInt {
   }
 
   // O(N)
-  private static fromDigits(digits: Uint32Array, isNegative: boolean = false, n: i32 = digits.length, minSize: i32 = digits.length): BigInt {
+  private static fromDigits(
+    digits: Uint32Array,
+    isNegative: boolean = false,
+    n: i32 = digits.length,
+    minSize: i32 = digits.length
+  ): BigInt {
     let size = minSize;
     if (size < digits.length) {
       size = digits.length;
@@ -122,8 +134,12 @@ export class BigInt {
     return BigInt.fromDigits(this.d, false, this.n);
   }
 
-  private static getEmptyResultContainer(minSize: i32, isNegative: boolean, n: i32): BigInt {
-    const size: i32 = minSize + BigInt.precision - minSize % BigInt.precision;
+  private static getEmptyResultContainer(
+    minSize: i32,
+    isNegative: boolean,
+    n: i32
+  ): BigInt {
+    const size: i32 = minSize + BigInt.precision - (minSize % BigInt.precision);
     const res: BigInt = new BigInt(size, isNegative);
     res.n = n;
     return res;
@@ -150,7 +166,7 @@ export class BigInt {
 
   private grow(size: i32): void {
     if (this.d.length >= size) return;
-    this.resize(size + 2 * BigInt.precision - size % BigInt.precision);
+    this.resize(size + 2 * BigInt.precision - (size % BigInt.precision));
   }
 
   // OUTPUT /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,10 +198,12 @@ export class BigInt {
   toInt32(): i32 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 31) {
-      throw new Error(`Cannot output i32 from an integer that uses ${bitCount} bits`);
+      throw new Error(
+        `Cannot output i32 from an integer that uses ${bitCount} bits`
+      );
     }
     if (bitCount <= 28) {
-      return (<i32>this.d[0]) * (this.isNeg ? -1 : 1);
+      return <i32>this.d[0] * (this.isNeg ? -1 : 1);
     }
     return I32.parseInt(this.toString());
   }
@@ -193,10 +211,12 @@ export class BigInt {
   toInt64(): i64 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 63) {
-      throw new Error(`Cannot output i64 from an integer that uses ${bitCount} bits`);
+      throw new Error(
+        `Cannot output i64 from an integer that uses ${bitCount} bits`
+      );
     }
     if (bitCount <= 28) {
-      return (<i64>this.d[0]) * (this.isNeg ? -1 : 1);
+      return <i64>this.d[0] * (this.isNeg ? -1 : 1);
     }
     return I64.parseInt(this.toString());
   }
@@ -204,10 +224,12 @@ export class BigInt {
   toUInt32(): u32 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 32) {
-      throw new Error(`Cannot output u32 from an integer that uses ${bitCount} bits`);
+      throw new Error(
+        `Cannot output u32 from an integer that uses ${bitCount} bits`
+      );
     }
     if (this.isNeg) {
-      throw new Error("Cannot cast negative integer to u32")
+      throw new Error("Cannot cast negative integer to u32");
     }
     if (bitCount <= 28) {
       return this.d[0];
@@ -218,10 +240,12 @@ export class BigInt {
   toUInt64(): u64 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 64) {
-      throw new Error(`Cannot output u64 from an integer that uses ${bitCount} bits`);
+      throw new Error(
+        `Cannot output u64 from an integer that uses ${bitCount} bits`
+      );
     }
     if (this.isNeg) {
-      throw new Error("Cannot cast negative integer to u64")
+      throw new Error("Cannot cast negative integer to u64");
     }
     if (bitCount <= 28) {
       return <u64>this.d[0];
@@ -328,7 +352,11 @@ export class BigInt {
       x = other;
     }
     // initialize result
-    const res: BigInt = BigInt.getEmptyResultContainer(max + 1, resultIsNegative, max);
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      max + 1,
+      resultIsNegative,
+      max
+    );
     // add
     let carry: u32 = 0;
     let i: i32 = 0;
@@ -356,19 +384,23 @@ export class BigInt {
     const min: i32 = other.n;
     const max: i32 = this.n;
     // initialize result
-    const res: BigInt = BigInt.getEmptyResultContainer(max, resultIsNegative, max);
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      max,
+      resultIsNegative,
+      max
+    );
     // subtract
     let carry: u32 = 0;
     let i: i32 = 0;
     for (; i < min; i++) {
       res.d[i] = this.d[i] - other.d[i] - carry;
-      carry = res.d[i] >> BigInt.actualBits - 1;
+      carry = res.d[i] >> (BigInt.actualBits - 1);
       res.d[i] &= BigInt.digitMask;
     }
     if (min < max) {
       for (; i < max; i++) {
         res.d[i] = this.d[i] - carry;
-        carry = res.d[i] >> BigInt.actualBits - 1;
+        carry = res.d[i] >> (BigInt.actualBits - 1);
         res.d[i] &= BigInt.digitMask;
       }
     }
@@ -379,11 +411,15 @@ export class BigInt {
 
   // efficient multiply by 2
   mul2(): BigInt {
-    const res: BigInt = BigInt.getEmptyResultContainer(this.n + 1, this.isNeg, this.n);
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n + 1,
+      this.isNeg,
+      this.n
+    );
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
-      let rr: u32 = this.d[i] >> BigInt.p - 1;
-      res.d[i] = (this.d[i] << 1 | r) & BigInt.digitMask;
+      const rr: u32 = this.d[i] >> (BigInt.p - 1);
+      res.d[i] = ((this.d[i] << 1) | r) & BigInt.digitMask;
       r = rr;
     }
     if (r != 0) {
@@ -394,11 +430,15 @@ export class BigInt {
 
   // efficient div by 2
   div2(): BigInt {
-    const res: BigInt = BigInt.getEmptyResultContainer(this.n, this.isNeg, this.n);
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n,
+      this.isNeg,
+      this.n
+    );
     let r: u32 = 0;
     for (let i = this.n - 1; i >= 0; i--) {
-      let rr: u32 = this.d[i] % 2;
-      res.d[i] = (this.d[i] >> 1) | (r << BigInt.p - 1);
+      const rr: u32 = this.d[i] % 2;
+      res.d[i] = (this.d[i] >> 1) | (r << (BigInt.p - 1));
       r = rr;
     }
     res.trimLeadingZeros();
@@ -459,11 +499,11 @@ export class BigInt {
     // shift by k % p bits
     const remK: i32 = k % BigInt.p;
     if (remK != 0) {
-      const mask: u32 = (<u32>1 << remK) - <u32>1;
+      const mask: u32 = ((<u32>1) << remK) - <u32>1;
       const shift: i32 = BigInt.p - remK;
       let r: u32 = 0;
       for (let i = 0; i < res.n; i++) {
-        let rr: u32 = (res.d[i] >> shift) & mask;
+        const rr: u32 = (res.d[i] >> shift) & mask;
         res.d[i] = ((res.d[i] << remK) | r) & BigInt.digitMask;
         r = rr;
       }
@@ -486,11 +526,11 @@ export class BigInt {
     }
     const remK: i32 = k % BigInt.p;
     if (remK != 0) {
-      const mask: u32 = (<u32>1 << remK) - <u32>1;
+      const mask: u32 = ((<u32>1) << remK) - <u32>1;
       const shift: i32 = BigInt.p - remK;
       let r: u32 = 0;
       for (let i = res.n - 1; i >= 0; i--) {
-        let rr: u32 = res.d[i] & mask;
+        const rr: u32 = res.d[i] & mask;
         res.d[i] = (res.d[i] >> remK) | (r << shift);
         r = rr;
       }
@@ -511,13 +551,13 @@ export class BigInt {
     }
     // zero out unused digits (any digit greater than 2^b)
     const kDivP: i32 = k / BigInt.p;
-    let i: i32 = kDivP + k % BigInt.p == 0 ? 0 : 1 // ceil of k / p
+    let i: i32 = kDivP + (k % BigInt.p) == 0 ? 0 : 1; // ceil of k / p
     for (; i < res.n; i++) {
       res.d[i] = 0;
     }
     // mod the remaining leading digit (which includes 2^b) using bitmask
     // remK = k % BigIntMP.p
-    res.d[kDivP] &= (<u32>1 << (k % BigInt.p)) - <u32>1;
+    res.d[kDivP] &= ((<u32>1) << k % BigInt.p) - <u32>1;
     // trim and return
     res.trimLeadingZeros();
     return res;
@@ -552,10 +592,10 @@ export class BigInt {
     for (let i = 0; i < this.n; i++) {
       let r: u32 = 0;
       const digsSubI: i32 = maxDigits - i;
-      let limitedN: i32 = other.n < digsSubI ? other.n : digsSubI;
+      const limitedN: i32 = other.n < digsSubI ? other.n : digsSubI;
       for (let j = 0; j < limitedN; j++) {
-        let rr: u64 = <u64>res.d[i + j] + <u64>this.d[i] * other.d[j] + r;
-        res.d[i + j] = <u32>(rr & <u64>BigInt.digitMask);
+        const rr: u64 = <u64>res.d[i + j] + <u64>this.d[i] * other.d[j] + r;
+        res.d[i + j] = <u32>(rr & (<u64>BigInt.digitMask));
         r = <u32>(rr >> BigInt.p);
       }
       if (i + limitedN < maxDigits) {
@@ -585,7 +625,7 @@ export class BigInt {
       for (let j = 0; j < innerN; j++) {
         w += <u64>this.d[tX + j] * other.d[tY - j];
       }
-      res.d[i] = <u32>w & BigInt.digitMask;
+      res.d[i] = (<u32>w) & BigInt.digitMask;
       w = w >> BigInt.p;
     }
     res.trimLeadingZeros();
@@ -610,7 +650,8 @@ export class BigInt {
   // https://github.com/Uniswap/uniswap-lib/blob/master/contracts/libraries/Babylonian.sol
   // eslint-disable-next-line @typescript-eslint/member-ordering
   sqrt(): BigInt {
-    if (this.isNeg) throw new RangeError("Square root of negative numbers is not supported");
+    if (this.isNeg)
+      throw new RangeError("Square root of negative numbers is not supported");
     if (this.n == 0) return this.copy();
     let res: BigInt = BigInt.getEmptyResultContainer(this.d.length, false, 1);
     res.d[0] = 1;
@@ -759,7 +800,7 @@ export class BigInt {
     }
     const cmp: i32 = this.magCompareTo(other);
     if (cmp < 0) {
-      return this.copy()
+      return this.copy();
     } else if (cmp == 0) {
       return BigInt.fromUInt16(0);
     }
@@ -778,7 +819,7 @@ export class BigInt {
       tempB = tempB.div2();
       tempQ = tempQ.div2();
     }
-    let r: BigInt = tempA;
+    const r: BigInt = tempA;
     r.isNeg = this.isNeg;
     r.trimLeadingZeros();
     return r;
@@ -792,7 +833,7 @@ export class BigInt {
     if (this.isZero()) {
       return BigInt.fromUInt16(0);
     }
-    const r :BigInt = other.div2();
+    const r: BigInt = other.div2();
     if (this.isNeg != other.isNeg) {
       r.isNeg = !r.isNeg;
     }
@@ -821,7 +862,7 @@ export class BigInt {
   // SINGLE-DIGIT HELPERS //////////////////////////////////////////////////////////////////////////////////////////////
 
   addInt(b: u32): BigInt {
-   return this.add(BigInt.fromUInt32(b));
+    return this.add(BigInt.fromUInt32(b));
   }
 
   subInt(b: u32): BigInt {
@@ -830,13 +871,15 @@ export class BigInt {
 
   mulInt(b: u32): BigInt {
     if (b > 268435456) {
-      throw new Error("mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)")
+      throw new Error(
+        "mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)"
+      );
     }
     const res = BigInt.fromDigits(this.d, this.isNeg, this.n, this.n + 1);
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
-      let rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
-      res.d[i] = <u32>(rr & <u64>BigInt.digitMask);
+      const rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
+      res.d[i] = <u32>(rr & (<u64>BigInt.digitMask));
       r = <u32>(rr >> BigInt.p);
     }
     if (r != 0) {
@@ -848,13 +891,15 @@ export class BigInt {
   // MUTATES
   private inplaceMulInt(b: u32): BigInt {
     if (b > 268435456) {
-      throw new Error("mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)")
+      throw new Error(
+        "mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)"
+      );
     }
     this.grow(this.n + 1);
     let r: u32 = 0;
     for (let i = 0; i < this.n; i++) {
-      let rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
-      this.d[i] = <u32>(rr & <u64>BigInt.digitMask);
+      const rr: u64 = <u64>this.d[i] * <u64>b + <u64>r;
+      this.d[i] = <u32>(rr & (<u64>BigInt.digitMask));
       r = <u32>(rr >> BigInt.p);
     }
     if (r != 0) {
@@ -874,7 +919,7 @@ export class BigInt {
     let r: u64 = 0;
     let val: u32;
     for (let i = this.n - 1; i >= 0; i--) {
-      r = r << BigInt.p | <u64>this.d[i];
+      r = (r << BigInt.p) | (<u64>this.d[i]);
       if (r >= b) {
         val = <u32>(r / b);
         r -= <u64>val * <u64>b;
@@ -898,7 +943,7 @@ export class BigInt {
     let r: u64 = 0;
     let val: u32;
     for (let i = this.n - 1; i >= 0; i--) {
-      r = r << BigInt.p | <u64>this.d[i];
+      r = (r << BigInt.p) | (<u64>this.d[i]);
       if (r >= b) {
         val = <u32>(r / b);
         r -= <u64>val * <u64>b;
@@ -919,14 +964,18 @@ export class BigInt {
     }
     const pow2Bit: i32 = BigInt.isPow2(b);
     if (pow2Bit != 0) {
-      return this.d[0] & ((<u32>1 << pow2Bit) - <u32>1);
+      return this.d[0] & (((<u32>1) << pow2Bit) - <u32>1);
     }
     // divide
-    let q: BigInt = BigInt.getEmptyResultContainer(this.n, this.isNeg, this.n);
+    const q: BigInt = BigInt.getEmptyResultContainer(
+      this.n,
+      this.isNeg,
+      this.n
+    );
     let r: u64 = 0;
     let val: u32;
     for (let i = this.n - 1; i >= 0; i--) {
-      r = r << BigInt.p | <u64>this.d[i];
+      r = (r << BigInt.p) | (<u64>this.d[i]);
       if (r >= b) {
         val = <u32>(r / b);
         r -= <u64>val * <u64>b;
@@ -965,7 +1014,7 @@ export class BigInt {
 
   private static isPow2(b: u32): i32 {
     for (let i = 1; i < BigInt.p; i++) {
-      if (b == (<u32>1 << i)) {
+      if (b == (<u32>1) << i) {
         return i;
       }
     }
@@ -980,11 +1029,11 @@ export class BigInt {
 
   static get ZERO(): BigInt {
     return BigInt.fromUInt16(0);
-  };
+  }
 
   static get ONE(): BigInt {
     return BigInt.fromUInt16(1);
-  };
+  }
 
   static eq(left: BigInt, right: BigInt): boolean {
     return left.eq(right);
