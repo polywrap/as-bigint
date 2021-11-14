@@ -1,72 +1,7 @@
 import { BigInt } from "../BigInt";
+import {testCases} from "./TestCase";
 
-describe("BigInt: Sanity", () => {
-
-  it("Construct big numbers", () => {
-    // constructor with small integer
-    const smallStr = "100";
-    const bigIntSmallStrCon = BigInt.fromString(smallStr);
-    expect(bigIntSmallStrCon.toString()).toStrictEqual(smallStr);
-    // using fromString static method
-    const bigIntSmallStrFrom = BigInt.fromString(smallStr);
-    expect(bigIntSmallStrFrom.toString()).toStrictEqual(smallStr);
-
-    // construct with big integer
-    const bigStr = "10000000000000000000000000000000000000000000000000000000000000000000";
-    const bigIntBigStr = BigInt.fromString(bigStr);
-    expect(bigIntBigStr.toString()).toStrictEqual(bigStr);
-    expect(bigIntBigStr.isNegative).toStrictEqual(false);
-
-    // construct with negative big integer
-    const bigStrNeg = "-10000000000000000000000000000000000000000000000000000000000000000000";
-    const bigIntBigStrNeg = BigInt.fromString(bigStrNeg);
-    expect(bigIntBigStrNeg.toString()).toStrictEqual(bigStrNeg);
-    expect(bigIntBigStrNeg.isNegative).toStrictEqual(true);
-
-    // construct with big integer from digits
-    const bigDig: u32[] = [1000, 1000, 1000];
-    const bigIntBigDig = BigInt.fromDigits(bigDig);
-    expect(bigIntBigDig.toString()).toStrictEqual("1000000001000000001000");
-    expect(bigIntBigDig.isNegative).toStrictEqual(false);
-    // construct with negative big integer from digits
-    const bigIntBigDigNeg = BigInt.fromDigits(bigDig, true);
-    expect(bigIntBigDigNeg.toString()).toStrictEqual("-1000000001000000001000");
-    expect(bigIntBigDigNeg.isNegative).toStrictEqual(true);
-
-  });
-
-
-  it("Comparison", () => {
-    // equals
-    const intA = "100000000000000000000000000000000000000000000000000";
-    const intB = "100000000000000000000000000000000000000000000000000";
-    const biA = BigInt.fromString(intA);
-    const biB = BigInt.fromString(intB);
-    expect(biA.eq(biB)).toStrictEqual(true);
-    expect(biA.lt(biB)).toStrictEqual(false);
-    expect(biA.lte(biB)).toStrictEqual(true);
-    expect(biA.gt(biB)).toStrictEqual(false);
-    expect(biA.gte(biB)).toStrictEqual(true);
-
-    // less than, greater than
-    const intC = "100000000000000000000000000000000000000000000000000";
-    const intD = "10000000000000000000000000000000000000000000000000";
-    const biC = BigInt.fromString(intC);
-    const biD = BigInt.fromString(intD);
-    // greater compared to lesser
-    expect(biC.eq(biD)).toStrictEqual(false);
-    expect(biC.lt(biD)).toStrictEqual(false);
-    expect(biC.lte(biD)).toStrictEqual(false);
-    expect(biC.gt(biD)).toStrictEqual(true);
-    expect(biC.gte(biD)).toStrictEqual(true);
-    // lesser compared to greater
-    expect(biD.lt(biC)).toStrictEqual(true);
-    expect(biD.lte(biC)).toStrictEqual(true);
-    expect(biD.gt(biC)).toStrictEqual(false);
-    expect(biD.gte(biC)).toStrictEqual(false);
-
-  });
-
+describe("BigInt: Arithmetic", () => {
 
   it("Addition", () => {
     // small integer addition
@@ -78,21 +13,21 @@ describe("BigInt: Sanity", () => {
 
     // big integer addition
     const intC = "1000000000000000000000000000000000000000000000000000000000000000000";
-    const intD = "0000000000000000005000000000000000000000000000000000000000000000000";
+    const intD = "5000000000000000000000000000000000000000000000000";
     const biC = BigInt.fromString(intC);
     const biD = BigInt.fromString(intD);
     expect(biC.add(biD).toString()).toStrictEqual("1000000000000000005000000000000000000000000000000000000000000000000");
 
     // addition with two negative numbers
     const intE = "-1000000000000000000000000000000000000000000000000000000000000000000";
-    const intF = "-0000000000000000005000000000000000000000000000000000000000000000000";
+    const intF = "-5000000000000000000000000000000000000000000000000";
     const biE = BigInt.fromString(intE);
     const biF = BigInt.fromString(intF);
     expect(biE.add(biF).toString()).toStrictEqual("-1000000000000000005000000000000000000000000000000000000000000000000");
 
     // addition with one negative number and one positive number
     const intG = "-1000000000000000005000000000000000000000000000000000000000000000000";
-    const intH = "0000000000000000005000000000000000000000000000000000000000000000000";
+    const intH = "5000000000000000000000000000000000000000000000000";
     const biG = BigInt.fromString(intG);
     const biH = BigInt.fromString(intH);
     expect(biG.add(biH).toString()).toStrictEqual("-1000000000000000000000000000000000000000000000000000000000000000000");
@@ -104,19 +39,28 @@ describe("BigInt: Sanity", () => {
     const biZ = BigInt.fromString(intZ);
     expect(biY.add(biZ).toString()).toStrictEqual("840839472643347287071870854974826105719891207760487");
 
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.add(y);
+      const expected = testCase.sum;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
   it("Subtraction", () => {
     // big integer subtraction
     const intA = "1000000000000000005000000000000000000000000000000000000000000000000";
-    const intB = "0000000000000000005000000000000000000000000000000000000000000000000";
+    const intB = "5000000000000000000000000000000000000000000000000";
     const biA = BigInt.fromString(intA);
     const biB = BigInt.fromString(intB);
     expect(biA.sub(biB).toString()).toStrictEqual("1000000000000000000000000000000000000000000000000000000000000000000");
 
     // subtraction of a bigger number from a smaller number and crossing zero to change signs
-    const intC = "0000000000000000005000000000000000000000000000000000000000000000000";
+    const intC = "5000000000000000000000000000000000000000000000000";
     const intD = "1000000000000000005000000000000000000000000000000000000000000000000";
     const biC = BigInt.fromString(intC);
     const biD = BigInt.fromString(intD);
@@ -124,19 +68,19 @@ describe("BigInt: Sanity", () => {
 
     // subtraction with two negative numbers
     const intE = "-1000000000000000005000000000000000000000000000000000000000000000000";
-    const intF = "-0000000000000000005000000000000000000000000000000000000000000000000";
+    const intF = "-5000000000000000000000000000000000000000000000000";
     const biE = BigInt.fromString(intE);
     const biF = BigInt.fromString(intF);
     expect(biE.sub(biF).toString()).toStrictEqual("-1000000000000000000000000000000000000000000000000000000000000000000");
 
     // subtraction with one negative number and one positive number
     const intG = "-1000000000000000005000000000000000000000000000000000000000000000000";
-    const intH = "0000000000000000005000000000000000000000000000000000000000000000000";
+    const intH = "5000000000000000000000000000000000000000000000000";
     const biG = BigInt.fromString(intG);
     const biH = BigInt.fromString(intH);
     expect(biG.sub(biH).toString()).toStrictEqual("-1000000000000000010000000000000000000000000000000000000000000000000");
     const intI = "1000000000000000005000000000000000000000000000000000000000000000000";
-    const intJ = "-0000000000000000005000000000000000000000000000000000000000000000000";
+    const intJ = "-5000000000000000000000000000000000000000000000000";
     const biI = BigInt.fromString(intI);
     const biJ = BigInt.fromString(intJ);
     expect(biI.sub(biJ).toString()).toStrictEqual("1000000000000000010000000000000000000000000000000000000000000000000");
@@ -148,6 +92,15 @@ describe("BigInt: Sanity", () => {
     const biZ = BigInt.fromString(intZ);
     expect(biY.sub(biZ).toString()).toStrictEqual("840839472643347286875051120382127051021956510890017");
 
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.sub(y);
+      const expected = testCase.difference;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
@@ -179,25 +132,23 @@ describe("BigInt: Sanity", () => {
     const biY = BigInt.fromString(intY);
     const biZ = BigInt.fromString(intZ);
     expect(biY.mul(biZ).toString()).toStrictEqual("82746900920364325240080057746476164545617939441639416531994182441731305785122054220");
+
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      const actual = x.mul(y);
+      const expected = testCase.product;
+      expect(actual.toString()).toStrictEqual(expected);
+    }
   });
 
 
   it("Division", () => {
-    // division by small integer
-    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intB = 1000
-    const biA = BigInt.fromString(intA);
-    expect(biA.divInt(intB).toString()).toStrictEqual("1748673246820348602804623476982897439256983468762846982060929060");
-
-    // modulo small integer
-    const intC = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intD = 1000
-    const biC = BigInt.fromString(intC);
-    expect(biC.modInt(intD).toString()).toStrictEqual("934");
-
     // division by big integer
     const intE = "1748673246820348602804623476982897439256983468762846982060929060934";
-    const intF = "0000000000000000000000000001000000000000000000000000000000000000000"
+    const intF = "1000000000000000000000000000000000000000"
     const biE = BigInt.fromString(intE);
     const biF = BigInt.fromString(intF);
     expect(biE.div(biF).toString()).toStrictEqual("1748673246820348602804623476");
@@ -221,22 +172,95 @@ describe("BigInt: Sanity", () => {
     const biY = BigInt.fromString(intY);
     const biZ = BigInt.fromString(intZ);
     expect(biY.div(biZ).toString()).toStrictEqual("8544259795730238462");
+
+    // divide by zero
+    const divByZero = (): void => {
+      const nonZero = BigInt.fromString("35823842568276438628975286634856582347658628346932865892348763");
+      const error = nonZero.div(BigInt.fromUInt16(0));
+    }
+    expect(divByZero).toThrow("Divide by zero");
+
+    // test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      const x = BigInt.fromString(testCase.x);
+      const y = BigInt.fromString(testCase.y);
+      if (y.ne(BigInt.fromUInt16(0))) {
+        const actual = x.div(y);
+        const expected = testCase.quotient;
+        expect(actual.toString()).toStrictEqual(expected);
+      }
+    }
   });
 
+  it("Modulo", () => {
+    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
+    const intB = BigInt.fromUInt32(1000);
+    const biA = BigInt.fromString(intA);
+    expect(biA.mod(intB).toString()).toStrictEqual("934");
 
-  it("Sqrt", () => {
-    // Square root with large, keyboard-mashed random numbers
-    const biA = BigInt.fromString("3057858124145219824908823108730476996787211345099474372535994731984517835859426295382779155662045288853072702726904352842299084952356");
-    expect(biA.sqrt().toString()).toStrictEqual("1748673246820348602804623476982897439256983468762846982060929060934");
+    const intC = "2346723486098230948609234809680924830623486934693035798178094579834709857342786097348979348793487826974309869284709634809760293847680973429786932";
+    const intD = BigInt.fromUInt32(26346234);
+    const biC = BigInt.fromString(intC);
+    expect(biC.mod(intD).toString()).toStrictEqual("26169584");
 
-    const biB = BigInt.fromString("38885979355701890764931367009156654082153602597277005998068110746569");
-    expect(biB.sqrt().toString()).toStrictEqual("6235862358623856826358623875623587");
+    const intE = "105697141579807349879852798073409832708927897823784178914830990148091970135287935278935178093152879873152981537"
+    const intF = BigInt.fromUInt32(34634);
+    const biE = BigInt.fromString(intE);
+    expect(biE.mod(intF).toString()).toStrictEqual("15525");
+  });
 
-    const biC = BigInt.fromString("707011018755142370596690561440450269690829465205449797047996582731278317572133241312051335080724863504");
-    expect(biC.sqrt().toString()).toStrictEqual("840839472643347286973460987678476578370923859325252");
+  it("Rounded division", () => {
+  // division by big integer -> rounds up
+    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
+    const intB = "1000000000000000000000000000000000000000"
+    const biA = BigInt.fromString(intA);
+    const biB = BigInt.fromString(intB);
+    expect(biA.roundedDiv(biB).toString()).toStrictEqual("1748673246820348602804623477");
 
-    const biD = BigInt.fromString("9684501981285124231672521053664615343720375041608711602989505225");
-    expect(biD.sqrt().toString()).toStrictEqual("98409867296349527348967348435235");
+    // division by larger number -> rounds to 0
+    const intC = "6235862358623856826358623875623587"
+    const intD = "17486732468203486028046234769828974";
+    const biC = BigInt.fromString(intC);
+    const biD = BigInt.fromString(intD);
+    expect(biC.roundedDiv(biD).toString()).toStrictEqual("0");
+
+    // division by larger number -> rounds to 1
+    const intE = "6235862358623856826358623875623587"
+    const intF = "11486732468203486028046234769828974";
+    const biE = BigInt.fromString(intE);
+    const biF = BigInt.fromString(intF);
+    expect(biE.roundedDiv(biF).toString()).toStrictEqual("1");
+
+    // is exactly 0.5 -> rounds to 1
+    const intG = "1943759813475"
+    const intH = "3887519626950";
+    const biG = BigInt.fromString(intG);
+    const biH = BigInt.fromString(intH);
+    expect(biG.roundedDiv(biH).toString()).toStrictEqual("1");
+
+    // ends in exactly 0.5 -> rounds up
+    const intJ = "7882137429"
+    const intK = "328758";
+    const biJ = BigInt.fromString(intJ);
+    const biK = BigInt.fromString(intK);
+    expect(biJ.roundedDiv(biK).toString()).toStrictEqual("23976");
+    expect(biJ.roundedDivInt(U32.parseInt(intK)).toString()).toStrictEqual("23976");
+
+    // ends in 0.42 -> rounds down
+    const intL = "7882137429"
+    const intM = "328759";
+    const biL = BigInt.fromString(intL);
+    const biM = BigInt.fromString(intM);
+    expect(biL.roundedDiv(biM).toString()).toStrictEqual("23975");
+    expect(biL.roundedDivInt(U32.parseInt(intM)).toString()).toStrictEqual("23975");
+
+    // divide by zero
+    const divByZero = (): void => {
+      const nonZero = BigInt.fromString("35823842568276438628975286634856582347658628346932865892348763");
+      const error = nonZero.roundedDiv(BigInt.fromUInt16(0));
+    }
+    expect(divByZero).toThrow("Divide by zero");
   });
 
 });

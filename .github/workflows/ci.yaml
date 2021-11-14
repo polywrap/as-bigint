@@ -1,12 +1,12 @@
-name: JS-CI
+name: CI
 
 on: [push, pull_request]
 
 jobs:
   CI:
-    name: JS-CI
+    name: CI
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -40,4 +40,4 @@ jobs:
         run: yarn build
 
       - name: Test
-        run: yarn __tests__:ci
+        run: yarn test:ci
