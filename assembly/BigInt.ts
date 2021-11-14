@@ -51,7 +51,7 @@ export class BigInt {
       } else {
         throw new RangeError("Character " + bigInteger.charAt(i) + " is not supported for radix " + radix.toString());
       }
-      res = res.inplaceMulInt(radixU).addInt(val);
+      res = res.inplaceMulInt(radixU).add(BigInt.fromUInt16(val));
     }
     res.isNeg = isNegative;
     res.trimLeadingZeros();
@@ -153,7 +153,7 @@ export class BigInt {
     this.resize(size + 2 * BigInt.precision - size % BigInt.precision);
   }
 
-  // STRING OUTPUT /////////////////////////////////////////////////////////////////////////////////////////////////////
+  // OUTPUT /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   toString(radix: i32 = 10): string {
     if (radix < 2 || radix > 16) {
@@ -177,6 +177,56 @@ export class BigInt {
     codes.reverse();
     res += String.fromCharCodes(codes);
     return res;
+  }
+
+  toInt32(): i32 {
+    const bitCount: i32 = this.countBits();
+    if (bitCount > 31) {
+      throw new Error(`Cannot output i32 from an integer that uses ${bitCount} bits`);
+    }
+    if (bitCount <= 28) {
+      return (<i32>this.d[0]) * (this.isNeg ? -1 : 1);
+    }
+    return I32.parseInt(this.toString());
+  }
+
+  toInt64(): i64 {
+    const bitCount: i32 = this.countBits();
+    if (bitCount > 63) {
+      throw new Error(`Cannot output i64 from an integer that uses ${bitCount} bits`);
+    }
+    if (bitCount <= 28) {
+      return (<i64>this.d[0]) * (this.isNeg ? -1 : 1);
+    }
+    return I64.parseInt(this.toString());
+  }
+
+  toUInt32(): u32 {
+    const bitCount: i32 = this.countBits();
+    if (bitCount > 32) {
+      throw new Error(`Cannot output u32 from an integer that uses ${bitCount} bits`);
+    }
+    if (this.isNeg) {
+      throw new Error("Cannot cast negative integer to u32")
+    }
+    if (bitCount <= 28) {
+      return this.d[0];
+    }
+    return U32.parseInt(this.toString());
+  }
+
+  toUInt64(): u64 {
+    const bitCount: i32 = this.countBits();
+    if (bitCount > 64) {
+      throw new Error(`Cannot output u64 from an integer that uses ${bitCount} bits`);
+    }
+    if (this.isNeg) {
+      throw new Error("Cannot cast negative integer to u64")
+    }
+    if (bitCount <= 28) {
+      return <u64>this.d[0];
+    }
+    return U64.parseInt(this.toString());
   }
 
   // COMPARISON OPERATORS //////////////////////////////////////////////////////////////////////////////////////////////
@@ -734,17 +784,50 @@ export class BigInt {
     return r;
   }
 
+  // divides and rounds to nearest integer
+  roundedDiv(other: BigInt): BigInt {
+    if (other.eq(BigInt.fromUInt16(0))) {
+      throw new Error("Divide by zero");
+    }
+    if (this.isZero()) {
+      return BigInt.fromUInt16(0);
+    }
+    const r :BigInt = other.div2();
+    if (this.isNeg != other.isNeg) {
+      r.isNeg = !r.isNeg;
+    }
+    return this.add(r).div(other);
+  }
+
+  // divides and rounds to nearest integer
+  // roundedDiv(other: BigInt): BigInt {
+  //   if (other.eq(BigInt.fromUInt16(0))) {
+  //     throw new Error("Divide by zero");
+  //   }
+  //   let n: BigInt = this;
+  //   let d: BigInt = other;
+  //   if (d.isNeg) {
+  //     n = n.opposite();
+  //     d = d.opposite();
+  //   }
+  //   const adj: BigInt = (n.isNeg ? d.subInt(1) : d).div2();
+  //   const res: BigInt = n.abs().add(adj).div(d);
+  //   if (this.isNeg) {
+  //     res.isNeg = !res.isNeg;
+  //   }
+  //   return res;
+  // }
+
   // SINGLE-DIGIT HELPERS //////////////////////////////////////////////////////////////////////////////////////////////
 
-  addInt(b: u16): BigInt {
-   return this.add(BigInt.fromUInt16(b));
+  addInt(b: u32): BigInt {
+   return this.add(BigInt.fromUInt32(b));
   }
 
-  subInt(b: u16): BigInt {
-    return this.sub(BigInt.fromUInt16(b));
+  subInt(b: u32): BigInt {
+    return this.sub(BigInt.fromUInt32(b));
   }
 
-  // TODO: can overflow if argument b is too large; 10**8 is okay but 10**9 sometimes overflows
   mulInt(b: u32): BigInt {
     if (b > 268435456) {
       throw new Error("mulInt only supports unisgned integer sizes of up to 28 bits (max value: 268435456)")
@@ -855,6 +938,16 @@ export class BigInt {
     return <u32>r;
   }
 
+  // divides and rounds to nearest integer
+  roundedDivInt(b: u32): BigInt {
+    if (b == 0) throw new Error("Divide by zero");
+    if (this.isZero()) {
+      return BigInt.fromUInt16(0);
+    }
+    const r: u32 = (this.isNeg ? -1 : 1) * (b >> 1);
+    return this.add(BigInt.fromUInt32(r)).divInt(b);
+  }
+
   // UTILITY ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   countBits(): i32 {
@@ -940,5 +1033,4 @@ export class BigInt {
   static mod(left: BigInt, right: BigInt): BigInt {
     return left.mod(right);
   }
-
 }

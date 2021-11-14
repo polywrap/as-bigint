@@ -106,3 +106,85 @@ describe("radix N read and write", () => {
   });
 
 });
+
+describe("output to int and uint", () => {
+
+  it("outputs to i32", () => {
+    const testBits: i32[] = [0, 1, 28, 31];
+    for (let i = 0; i < testBits.length; i++) {
+      const j: i32 = 2 ** i - 1;
+      const bi = BigInt.fromUInt32(<u32>j);
+      expect(bi.toInt32()).toStrictEqual(j);
+    }
+
+    // throws on overflow
+    const overflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(I32.MAX_VALUE.toString()).addInt(1);
+      const error = tooBig.toInt32();
+    }
+    expect(overflow).toThrow(`Cannot output i32 from an integer that uses ${32} bits`);
+  });
+
+  it("outputs to u32", () => {
+    const testBits: u32[] = [0, 1, 28, 32];
+    for (let i = 0; i < testBits.length; i++) {
+      const j: u32 = 2 ** <u32>i - 1;
+      const bi = BigInt.fromUInt32(j);
+      expect(bi.toUInt32()).toStrictEqual(j);
+    }
+
+    // throws on overflow
+    const overflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(U32.MAX_VALUE.toString()).addInt(1);
+      const error = tooBig.toUInt32();
+    }
+    expect(overflow).toThrow(`Cannot output u32 from an integer that uses ${33} bits`);
+
+    // throws on negative
+    const negative = (): void => {
+      const tooBig: BigInt = BigInt.fromString(U32.MAX_VALUE.toString()).opposite();
+      const error = tooBig.toUInt32();
+    }
+    expect(negative).toThrow("Cannot cast negative integer to u32");
+  });
+
+  it("outputs to i64", () => {
+    const testBits: i64[] = [0, 1, 28, 63];
+    for (let i = 0; i < testBits.length; i++) {
+      const j: i64 = 2 ** <i64>i - 1;
+      const bi = BigInt.fromUInt64(<u64>j);
+      expect(bi.toInt64()).toStrictEqual(j);
+    }
+
+    // throws on overflow
+    const overflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(I64.MAX_VALUE.toString()).addInt(1);
+      const error = tooBig.toInt64();
+    }
+    expect(overflow).toThrow(`Cannot output i64 from an integer that uses ${64} bits`);
+  });
+
+  it("outputs to u64", () => {
+    const testBits: u64[] = [0, 1, 28, 64];
+    for (let i = 0; i < testBits.length; i++) {
+      const j: u64 = 2 ** <u64>i - 1;
+      const bi = BigInt.fromUInt64(j);
+      expect(bi.toUInt64()).toStrictEqual(j);
+    }
+
+    // throws on overflow
+    const overflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(U64.MAX_VALUE.toString()).addInt(1);
+      const error = tooBig.toUInt64();
+    }
+    expect(overflow).toThrow(`Cannot output u64 from an integer that uses ${65} bits`);
+
+    // throws on negative
+    const negative = (): void => {
+      const tooBig: BigInt = BigInt.fromString(U64.MAX_VALUE.toString()).opposite();
+      const error = tooBig.toUInt64();
+    }
+    expect(negative).toThrow("Cannot cast negative integer to u64");
+  });
+
+});

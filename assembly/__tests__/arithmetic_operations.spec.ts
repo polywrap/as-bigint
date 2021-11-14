@@ -210,4 +210,57 @@ describe("BigInt: Arithmetic", () => {
     expect(biE.mod(intF).toString()).toStrictEqual("15525");
   });
 
+  it("Rounded division", () => {
+  // division by big integer -> rounds up
+    const intA = "1748673246820348602804623476982897439256983468762846982060929060934";
+    const intB = "1000000000000000000000000000000000000000"
+    const biA = BigInt.fromString(intA);
+    const biB = BigInt.fromString(intB);
+    expect(biA.roundedDiv(biB).toString()).toStrictEqual("1748673246820348602804623477");
+
+    // division by larger number -> rounds to 0
+    const intC = "6235862358623856826358623875623587"
+    const intD = "17486732468203486028046234769828974";
+    const biC = BigInt.fromString(intC);
+    const biD = BigInt.fromString(intD);
+    expect(biC.roundedDiv(biD).toString()).toStrictEqual("0");
+
+    // division by larger number -> rounds to 1
+    const intE = "6235862358623856826358623875623587"
+    const intF = "11486732468203486028046234769828974";
+    const biE = BigInt.fromString(intE);
+    const biF = BigInt.fromString(intF);
+    expect(biE.roundedDiv(biF).toString()).toStrictEqual("1");
+
+    // is exactly 0.5 -> rounds to 1
+    const intG = "1943759813475"
+    const intH = "3887519626950";
+    const biG = BigInt.fromString(intG);
+    const biH = BigInt.fromString(intH);
+    expect(biG.roundedDiv(biH).toString()).toStrictEqual("1");
+
+    // ends in exactly 0.5 -> rounds up
+    const intJ = "7882137429"
+    const intK = "328758";
+    const biJ = BigInt.fromString(intJ);
+    const biK = BigInt.fromString(intK);
+    expect(biJ.roundedDiv(biK).toString()).toStrictEqual("23976");
+    expect(biJ.roundedDivInt(U32.parseInt(intK)).toString()).toStrictEqual("23976");
+
+    // ends in 0.42 -> rounds down
+    const intL = "7882137429"
+    const intM = "328759";
+    const biL = BigInt.fromString(intL);
+    const biM = BigInt.fromString(intM);
+    expect(biL.roundedDiv(biM).toString()).toStrictEqual("23975");
+    expect(biL.roundedDivInt(U32.parseInt(intM)).toString()).toStrictEqual("23975");
+
+    // divide by zero
+    const divByZero = (): void => {
+      const nonZero = BigInt.fromString("35823842568276438628975286634856582347658628346932865892348763");
+      const error = nonZero.roundedDiv(BigInt.fromUInt16(0));
+    }
+    expect(divByZero).toThrow("Divide by zero");
+  });
+
 });
