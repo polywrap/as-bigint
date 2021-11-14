@@ -2,13 +2,12 @@ module.exports = {
   root: true,
   env: {
     es6: true,
-    node: true,
-    mocha: true
+    node: false,
+    mocha: false
   },
-  ignorePatterns: ["**/__tests__/**/*.*"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaVersion: "es2019",
+    ecmaVersion: "esnext",
     tsconfigRootDir: __dirname,
     project: ['./tsconfig.json'],
   },
@@ -24,6 +23,7 @@ module.exports = {
     "prettier"
   ],
   rules: {
+    "prettier/prettier": ["error"],
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/member-ordering": "off",
@@ -31,14 +31,13 @@ module.exports = {
       {selector: "default", format: ['camelCase']},
       {selector: ["objectLiteralProperty", "parameterProperty", "classMethod"], format: ['camelCase'], leadingUnderscore: "allow"},
       //variable must be in camel or upper case
-      {selector: ["classProperty", "variable"], format: ["camelCase", "UPPER_CASE"], leadingUnderscore: "allow"},
+      {selector: ["classProperty", "variable", "accessor"], format: ["camelCase", "UPPER_CASE"], leadingUnderscore: "allow"},
       //classes and types must be in PascalCase
       {selector: ["typeLike", "enum"], format: ['PascalCase']},
       {selector: ["parameter"], format: ['snake_case', "camelCase"], leadingUnderscore: "allow"},
       {selector: "enumMember", format: null},
       {selector: "function", format: null, leadingUnderscore: "allowSingleOrDouble"},
     ],
-    "prettier/prettier": ["error"],
     "@typescript-eslint/explicit-module-boundary-types": "error",
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-require-imports": "error",

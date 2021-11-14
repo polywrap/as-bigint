@@ -1,0 +1,9 @@
+{
+  "extends": "./node_modules/assemblyscript/std/assembly.json",
+  "compilerOptions": {
+    "outDir": "build"
+  },
+  "include": [
+    "./assembly/**/*.ts",
+  ]
+}

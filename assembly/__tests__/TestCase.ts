@@ -11,7 +11,17 @@ export class TestCase {
   xCube: string;
   yQuad: string;
 
-  constructor(x: string, y: string, sum: string, difference: string, product: string, quotient: string, xSquare: string, xCube: string, yQuad: string) {
+  constructor(
+    x: string,
+    y: string,
+    sum: string,
+    difference: string,
+    product: string,
+    quotient: string,
+    xSquare: string,
+    xCube: string,
+    yQuad: string
+  ) {
     this.x = x;
     this.y = y;
     this.sum = sum;
@@ -91,17 +101,7 @@ export const testCases: TestCase[] = [
     "-668019472734058509414026137662362356747333224005032012373726553549650105739806066548146910279432236802447181932958977254013418436309687338538060958947147898531701212881278147700026930474051648114839513014743786333709424825069445114577",
     "0"
   ),
-  new TestCase(
-    "-1",
-    "1",
-    "0",
-    "-2",
-    "-1",
-    "-1",
-    "1",
-    "-1",
-    "1"
-  ),
+  new TestCase("-1", "1", "0", "-2", "-1", "-1", "1", "-1", "1"),
   new TestCase(
     "000000000000000000000000000000000000000000000000000000000000000000000001",
     "-0000000000000000000000000000000000000000000000000000000000000000001",
@@ -113,4 +113,4 @@ export const testCases: TestCase[] = [
     "1",
     "1"
   ),
-]
+];
