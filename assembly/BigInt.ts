@@ -1300,19 +1300,34 @@ export class BigInt {
 
   @operator("**")
   private static powOp(left: BigInt, right: BigInt): BigInt {
-    const e: i32 = right.toInt32();
+    if (right.n > 1) {
+      throw new RangeError(
+        "Operator overload ** is not supported for right-hand operand values outside the range 0 to 268435455"
+      );
+    }
+    const e: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
     return left.pow(e);
   }
 
   @operator("<<")
   private static mulPowTwo(left: BigInt, right: BigInt): BigInt {
-    const k: i32 = right.toInt32();
+    if (right.n > 1) {
+      throw new RangeError(
+        "Operator overload << is not supported for right-hand operand values outside the range 0 to 268435455"
+      );
+    }
+    const k: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
     return left.mulPowTwo(k);
   }
 
   @operator(">>")
   private static divPowTwo(left: BigInt, right: BigInt): BigInt {
-    const k: i32 = right.toInt32();
+    if (right.n > 1) {
+      throw new RangeError(
+        "Operator overload >> is not supported for right-hand operand values outside the range 0 to 268435455"
+      );
+    }
+    const k: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
     return left.divPowTwo(k);
   }
 }

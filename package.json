@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/web3-api/BigInt.git"
   },
-  "version": "0.2.4",
+  "version": "0.3.0",
   "types": "assembly/index.ts",
   "releaseFiles": [
     "assembly/",
