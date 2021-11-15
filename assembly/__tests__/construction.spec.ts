@@ -112,16 +112,24 @@ describe("output to int and uint", () => {
       expect(bi.toInt32()).toStrictEqual(j);
     }
 
-    // throws on overflow
+    // throws on overflow from too many bits
     const overflow = (): void => {
-      const tooBig: BigInt = BigInt.fromString(I32.MAX_VALUE.toString()).addInt(
+      const tooBig: BigInt = BigInt.fromString(U32.MAX_VALUE.toString()).addInt(
         1
       );
       const _error = tooBig.toInt32();
     };
     expect(overflow).toThrow(
-      `Cannot output i32 from an integer that uses ${32} bits`
+      `Integer overflow: cannot output i32 from an integer that uses ${33} bits`
     );
+    // throws on signed integer overflow
+    const signedOverflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(I32.MAX_VALUE.toString()).addInt(
+        1
+      );
+      const _error = tooBig.toInt32();
+    };
+    expect(signedOverflow).toThrow("Signed integer overflow");
   });
 
   it("outputs to u32", () => {
@@ -140,7 +148,7 @@ describe("output to int and uint", () => {
       const _error = tooBig.toUInt32();
     };
     expect(overflow).toThrow(
-      `Cannot output u32 from an integer that uses ${33} bits`
+      `Integer overflow: cannot output u32 from an integer that uses ${33} bits`
     );
 
     // throws on negative
@@ -169,8 +177,16 @@ describe("output to int and uint", () => {
       const _error = tooBig.toInt64();
     };
     expect(overflow).toThrow(
-      `Cannot output i64 from an integer that uses ${64} bits`
+      `Integer overflow: cannot output i64 from an integer that uses ${65} bits`
     );
+    // throws on signed integer overflow
+    const signedOverflow = (): void => {
+      const tooBig: BigInt = BigInt.fromString(I64.MAX_VALUE.toString()).addInt(
+        1
+      );
+      const _error = tooBig.toInt64();
+    };
+    expect(signedOverflow).toThrow("Signed integer overflow");
   });
 
   it("outputs to u64", () => {
@@ -189,7 +205,7 @@ describe("output to int and uint", () => {
       const _error = tooBig.toUInt64();
     };
     expect(overflow).toThrow(
-      `Cannot output u64 from an integer that uses ${65} bits`
+      `Integer overflow: cannot output u64 from an integer that uses ${65} bits`
     );
 
     // throws on negative

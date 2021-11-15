@@ -197,35 +197,45 @@ export class BigInt {
 
   toInt32(): i32 {
     const bitCount: i32 = this.countBits();
-    if (bitCount > 31) {
+    if (bitCount > 32) {
       throw new Error(
-        `Cannot output i32 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output i32 from an integer that uses ${bitCount} bits`
       );
     }
     if (bitCount <= 28) {
       return <i32>this.d[0] * (this.isNeg ? -1 : 1);
     }
-    return I32.parseInt(this.toString());
+    const biString: string = this.toString();
+    const result: i32 = I32.parseInt(biString);
+    if (bitCount == 32 && result.toString() != biString) {
+      throw new Error("Signed integer overflow");
+    }
+    return result;
   }
 
   toInt64(): i64 {
     const bitCount: i32 = this.countBits();
-    if (bitCount > 63) {
+    if (bitCount > 64) {
       throw new Error(
-        `Cannot output i64 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output i64 from an integer that uses ${bitCount} bits`
       );
     }
     if (bitCount <= 28) {
       return <i64>this.d[0] * (this.isNeg ? -1 : 1);
     }
-    return I64.parseInt(this.toString());
+    const biString: string = this.toString();
+    const result: i64 = I64.parseInt(biString);
+    if (bitCount == 64 && result.toString() != biString) {
+      throw new Error("Signed integer overflow");
+    }
+    return result;
   }
 
   toUInt32(): u32 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 32) {
       throw new Error(
-        `Cannot output u32 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output u32 from an integer that uses ${bitCount} bits`
       );
     }
     if (this.isNeg) {
@@ -241,7 +251,7 @@ export class BigInt {
     const bitCount: i32 = this.countBits();
     if (bitCount > 64) {
       throw new Error(
-        `Cannot output u64 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output u64 from an integer that uses ${bitCount} bits`
       );
     }
     if (this.isNeg) {
@@ -409,6 +419,44 @@ export class BigInt {
     return res;
   }
 
+  // unsigned addition of 1
+  private _addOne(resultIsNegative: boolean): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n + 1,
+      resultIsNegative,
+      this.n
+    );
+    let carry = 1;
+    for (let i = 0; i < this.n; i++) {
+      res.d[i] = this.d[i] + carry;
+      carry = res.d[i] >> BigInt.p;
+      res.d[i] &= BigInt.digitMask;
+    }
+    if (carry > 0) {
+      res.d[this.n] = carry;
+      res.n++;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // unsigned subtraction of 1
+  private _subOne(resultIsNegative: boolean): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n,
+      resultIsNegative,
+      this.n
+    );
+    let carry = 1;
+    for (let i = 0; i < this.n; i++) {
+      res.d[i] = this.d[i] - carry;
+      carry = res.d[i] >> (BigInt.actualBits - 1);
+      res.d[i] &= BigInt.digitMask;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
   // efficient multiply by 2
   mul2(): BigInt {
     const res: BigInt = BigInt.getEmptyResultContainer(
@@ -485,7 +533,6 @@ export class BigInt {
 
   // multiply by power of 2
   // O(2N)
-  @operator("<<")
   mulPowTwo(k: i32): BigInt {
     if (k <= 0) {
       return this.copy();
@@ -515,7 +562,6 @@ export class BigInt {
   }
 
   // divide by power of 2
-  @operator(">>")
   divPowTwo(k: i32): BigInt {
     const res = this.copy();
     if (k == 0) {
@@ -634,7 +680,6 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  @operator("**")
   pow(exponent: i32): BigInt {
     if (exponent < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
@@ -997,6 +1042,176 @@ export class BigInt {
     return this.add(BigInt.fromUInt32(r)).divInt(b);
   }
 
+  // BITWISE OPERATIONS ////////////////////////////////////////////////////////////////////////////////////////////////
+
+  @operator.prefix("~")
+  static bitwiseNot(a: BigInt): BigInt {
+    if (a.isNeg) {
+      // ~(-x) == ~(~(x-1)) == x-1
+      return a._subOne(false);
+    }
+    // ~x == -x-1 == -(x+1)
+    return a._addOne(true);
+  }
+
+  @operator("&")
+  static bitwiseAnd(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._and(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) & (-y) == ~(x-1) & ~(y-1) == ~((x-1) | (y-1))
+      // == -(((x-1) | (y-1)) + 1)
+      const a1 = a._subOne(false);
+      const b1 = b._subOne(false);
+      return BigInt._or(a1, b1)._addOne(true);
+    }
+    // Assume that 'a' is the positive BigInt
+    if (a.isNeg) {
+      const temp: BigInt = a;
+      a = b;
+      b = temp;
+    }
+    // x & (-y) == x & ~(y-1) == x &~ (y-1)
+    const b1 = b._subOne(false);
+    return a._andNot(b1);
+  }
+
+  @operator("|")
+  static bitwiseOr(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._or(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) | (-y) == ~(x-1) | ~(y-1) == ~((x-1) & (y-1))
+      // == -(((x-1) & (y-1)) + 1)
+      const a1: BigInt = a._subOne(false);
+      const b1: BigInt = b._subOne(false);
+      return BigInt._and(a1, b1)._addOne(true);
+    } else {
+      // Assume that 'a' is the positive BigInt
+      if (a.isNeg) {
+        const temp: BigInt = a;
+        a = b;
+        b = temp;
+      }
+      // x | (-y) == x | ~(y-1) == ~((y-1) &~ x) == -(((y-1) ~& x) + 1)
+      const b1: BigInt = b._subOne(false);
+      return b1._andNot(a)._addOne(true);
+    }
+  }
+
+  @operator("^")
+  static bitwiseXor(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._xor(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) ^ (-y) == ~(x-1) ^ ~(y-1) == (x-1) ^ (y-1)
+      const a1: BigInt = a._subOne(false);
+      const b1: BigInt = b._subOne(false);
+      return BigInt._xor(a1, b1);
+    } else {
+      // Assume that 'a' is the positive BigInt
+      if (a.isNeg) {
+        const temp: BigInt = a;
+        a = b;
+        b = temp;
+      }
+      // x ^ (-y) == x ^ ~(y-1) == ~(x ^ (y-1)) == -((x ^ (y-1)) + 1)
+      const b1: BigInt = b._subOne(false);
+      return BigInt._xor(a, b1)._addOne(true);
+    }
+  }
+
+  // unsigned bitwise AND
+  private static _and(a: BigInt, b: BigInt): BigInt {
+    const numPairs: i32 = a.n < b.n ? a.n : b.n;
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      numPairs,
+      false,
+      numPairs
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] & b.d[i];
+    }
+    return res;
+  }
+
+  // unsigned bitwise AND NOT (i.e. a & ~b)
+  private _andNot(other: BigInt): BigInt {
+    const numPairs: i32 = this.n < other.n ? this.n : other.n;
+    const res: BigInt = BigInt.getEmptyResultContainer(this.n, false, this.n);
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = this.d[i] & ~other.d[i];
+    }
+    for (; i < this.n; i++) {
+      res.d[i] = this.d[i];
+    }
+    return res;
+  }
+
+  // unsigned bitwise OR
+  private static _or(a: BigInt, b: BigInt): BigInt {
+    let numPairs: i32;
+    let resLength: i32;
+    if (a.n > b.n) {
+      numPairs = b.n;
+      resLength = a.n;
+    } else {
+      numPairs = a.n;
+      resLength = b.n;
+    }
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      resLength,
+      false,
+      resLength
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] | b.d[i];
+    }
+    for (; i < a.n; i++) {
+      res.d[i] = a.d[i];
+    }
+    for (; i < b.n; i++) {
+      res.d[i] = b.d[i];
+    }
+    return res;
+  }
+
+  // unsigned bitwise XOR
+  private static _xor(a: BigInt, b: BigInt): BigInt {
+    let numPairs: i32;
+    let resLength: i32;
+    if (a.n > b.n) {
+      numPairs = b.n;
+      resLength = a.n;
+    } else {
+      numPairs = a.n;
+      resLength = b.n;
+    }
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      resLength,
+      false,
+      resLength
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] ^ b.d[i];
+    }
+    for (; i < a.n; i++) {
+      res.d[i] = a.d[i];
+    }
+    for (; i < b.n; i++) {
+      res.d[i] = b.d[i];
+    }
+    return res;
+  }
+
   // UTILITY ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   countBits(): i32 {
@@ -1025,7 +1240,7 @@ export class BigInt {
     return this.n == 0;
   }
 
-  // SYNTACTIC SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
+  // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   static get ZERO(): BigInt {
     return BigInt.fromUInt16(0);
@@ -1081,5 +1296,23 @@ export class BigInt {
 
   static mod(left: BigInt, right: BigInt): BigInt {
     return left.mod(right);
+  }
+
+  @operator("**")
+  private static powOp(left: BigInt, right: BigInt): BigInt {
+    const e: i32 = right.toInt32();
+    return left.pow(e);
+  }
+
+  @operator("<<")
+  private static mulPowTwo(left: BigInt, right: BigInt): BigInt {
+    const k: i32 = right.toInt32();
+    return left.mulPowTwo(k);
+  }
+
+  @operator(">>")
+  private static divPowTwo(left: BigInt, right: BigInt): BigInt {
+    const k: i32 = right.toInt32();
+    return left.divPowTwo(k);
   }
 }
