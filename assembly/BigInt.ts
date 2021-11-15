@@ -197,35 +197,45 @@ export class BigInt {
 
   toInt32(): i32 {
     const bitCount: i32 = this.countBits();
-    if (bitCount > 31) {
+    if (bitCount > 32) {
       throw new Error(
-        `Cannot output i32 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output i32 from an integer that uses ${bitCount} bits`
       );
     }
     if (bitCount <= 28) {
       return <i32>this.d[0] * (this.isNeg ? -1 : 1);
     }
-    return I32.parseInt(this.toString());
+    const biString: string = this.toString();
+    const result: i32 = I32.parseInt(biString);
+    if (bitCount == 32 && result.toString() != biString) {
+      throw new Error("Signed integer overflow");
+    }
+    return result;
   }
 
   toInt64(): i64 {
     const bitCount: i32 = this.countBits();
-    if (bitCount > 63) {
+    if (bitCount > 64) {
       throw new Error(
-        `Cannot output i64 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output i64 from an integer that uses ${bitCount} bits`
       );
     }
     if (bitCount <= 28) {
       return <i64>this.d[0] * (this.isNeg ? -1 : 1);
     }
-    return I64.parseInt(this.toString());
+    const biString: string = this.toString();
+    const result: i64 = I64.parseInt(biString);
+    if (bitCount == 64 && result.toString() != biString) {
+      throw new Error("Signed integer overflow");
+    }
+    return result;
   }
 
   toUInt32(): u32 {
     const bitCount: i32 = this.countBits();
     if (bitCount > 32) {
       throw new Error(
-        `Cannot output u32 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output u32 from an integer that uses ${bitCount} bits`
       );
     }
     if (this.isNeg) {
@@ -241,7 +251,7 @@ export class BigInt {
     const bitCount: i32 = this.countBits();
     if (bitCount > 64) {
       throw new Error(
-        `Cannot output u64 from an integer that uses ${bitCount} bits`
+        `Integer overflow: cannot output u64 from an integer that uses ${bitCount} bits`
       );
     }
     if (this.isNeg) {
@@ -523,7 +533,6 @@ export class BigInt {
 
   // multiply by power of 2
   // O(2N)
-  @operator("<<")
   mulPowTwo(k: i32): BigInt {
     if (k <= 0) {
       return this.copy();
@@ -553,7 +562,6 @@ export class BigInt {
   }
 
   // divide by power of 2
-  @operator(">>")
   divPowTwo(k: i32): BigInt {
     const res = this.copy();
     if (k == 0) {
@@ -672,7 +680,6 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  @operator("**")
   pow(exponent: i32): BigInt {
     if (exponent < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
@@ -1130,8 +1137,7 @@ export class BigInt {
     return res;
   }
 
-  // sort of an unsigned bitwise AND NOT (i.e. a & ~b)
-  // see: https://github.com/GoogleChromeLabs/jsbi/blob/d66a968b1e20b8c070051f25d9578291cb01ad2b/lib/jsbi.ts#L1268
+  // unsigned bitwise AND NOT (i.e. a & ~b)
   private _andNot(other: BigInt): BigInt {
     const numPairs: i32 = this.n < other.n ? this.n : other.n;
     const res: BigInt = BigInt.getEmptyResultContainer(this.n, false, this.n);
@@ -1141,7 +1147,7 @@ export class BigInt {
       res.d[i] = this.d[i] & ~other.d[i];
     }
     for (; i < this.n; i++) {
-      res.d[i] = this.d[i]; // TODO: this seems wrong. this is more of an OR thing
+      res.d[i] = this.d[i];
     }
     return res;
   }
@@ -1234,7 +1240,7 @@ export class BigInt {
     return this.n == 0;
   }
 
-  // SYNTACTIC SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
+  // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   static get ZERO(): BigInt {
     return BigInt.fromUInt16(0);
@@ -1290,5 +1296,23 @@ export class BigInt {
 
   static mod(left: BigInt, right: BigInt): BigInt {
     return left.mod(right);
+  }
+
+  @operator("**")
+  private static powOp(left: BigInt, right: BigInt): BigInt {
+    const e: i32 = right.toInt32();
+    return left.pow(e);
+  }
+
+  @operator("<<")
+  private static mulPowTwo(left: BigInt, right: BigInt): BigInt {
+    const k: i32 = right.toInt32();
+    return left.mulPowTwo(k);
+  }
+
+  @operator(">>")
+  private static divPowTwo(left: BigInt, right: BigInt): BigInt {
+    const k: i32 = right.toInt32();
+    return left.divPowTwo(k);
   }
 }
