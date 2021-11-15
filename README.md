@@ -134,5 +134,7 @@ Web3API developed BigInt to use in the development tools we produce for fast, la
 The BigInt method implementations are largely based on *BigNum Math: Implementing Cryptographic Multiple Precision Arithmetic 1st Edition*
 by Tom St Denis.
 
+All bitwise operation methods are based on Google's [JSBI](https://github.com/GoogleChromeLabs/jsbi/blob/main/lib/jsbi.ts).
+
 ## Contact
 Please create an issue in this repository or email kris@dorg.tech

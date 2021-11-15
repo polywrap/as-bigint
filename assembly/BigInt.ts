@@ -409,6 +409,44 @@ export class BigInt {
     return res;
   }
 
+  // unsigned addition of 1
+  private _addOne(resultIsNegative: boolean): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n + 1,
+      resultIsNegative,
+      this.n
+    );
+    let carry = 1;
+    for (let i = 0; i < this.n; i++) {
+      res.d[i] = this.d[i] + carry;
+      carry = res.d[i] >> BigInt.p;
+      res.d[i] &= BigInt.digitMask;
+    }
+    if (carry > 0) {
+      res.d[this.n] = carry;
+      res.n++;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  // unsigned subtraction of 1
+  private _subOne(resultIsNegative: boolean): BigInt {
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      this.n,
+      resultIsNegative,
+      this.n
+    );
+    let carry = 1;
+    for (let i = 0; i < this.n; i++) {
+      res.d[i] = this.d[i] - carry;
+      carry = res.d[i] >> (BigInt.actualBits - 1);
+      res.d[i] &= BigInt.digitMask;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
   // efficient multiply by 2
   mul2(): BigInt {
     const res: BigInt = BigInt.getEmptyResultContainer(
@@ -995,6 +1033,177 @@ export class BigInt {
     }
     const r: u32 = (this.isNeg ? -1 : 1) * (b >> 1);
     return this.add(BigInt.fromUInt32(r)).divInt(b);
+  }
+
+  // BITWISE OPERATIONS ////////////////////////////////////////////////////////////////////////////////////////////////
+
+  @operator.prefix("~")
+  static bitwiseNot(a: BigInt): BigInt {
+    if (a.isNeg) {
+      // ~(-x) == ~(~(x-1)) == x-1
+      return a._subOne(false);
+    }
+    // ~x == -x-1 == -(x+1)
+    return a._addOne(true);
+  }
+
+  @operator("&")
+  static bitwiseAnd(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._and(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) & (-y) == ~(x-1) & ~(y-1) == ~((x-1) | (y-1))
+      // == -(((x-1) | (y-1)) + 1)
+      const a1 = a._subOne(false);
+      const b1 = b._subOne(false);
+      return BigInt._or(a1, b1)._addOne(true);
+    }
+    // Assume that 'a' is the positive BigInt
+    if (a.isNeg) {
+      const temp: BigInt = a;
+      a = b;
+      b = temp;
+    }
+    // x & (-y) == x & ~(y-1) == x &~ (y-1)
+    const b1 = b._subOne(false);
+    return a._andNot(b1);
+  }
+
+  @operator("|")
+  static bitwiseOr(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._or(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) | (-y) == ~(x-1) | ~(y-1) == ~((x-1) & (y-1))
+      // == -(((x-1) & (y-1)) + 1)
+      const a1: BigInt = a._subOne(false);
+      const b1: BigInt = b._subOne(false);
+      return BigInt._and(a1, b1)._addOne(true);
+    } else {
+      // Assume that 'a' is the positive BigInt
+      if (a.isNeg) {
+        const temp: BigInt = a;
+        a = b;
+        b = temp;
+      }
+      // x | (-y) == x | ~(y-1) == ~((y-1) &~ x) == -(((y-1) ~& x) + 1)
+      const b1: BigInt = b._subOne(false);
+      return b1._andNot(a)._addOne(true);
+    }
+  }
+
+  @operator("^")
+  static bitwiseXor(a: BigInt, b: BigInt): BigInt {
+    if (!a.isNeg && !b.isNeg) {
+      return BigInt._xor(a, b);
+    } else if (a.isNeg && b.isNeg) {
+      // (-x) ^ (-y) == ~(x-1) ^ ~(y-1) == (x-1) ^ (y-1)
+      const a1: BigInt = a._subOne(false);
+      const b1: BigInt = b._subOne(false);
+      return BigInt._xor(a1, b1);
+    } else {
+      // Assume that 'a' is the positive BigInt
+      if (a.isNeg) {
+        const temp: BigInt = a;
+        a = b;
+        b = temp;
+      }
+      // x ^ (-y) == x ^ ~(y-1) == ~(x ^ (y-1)) == -((x ^ (y-1)) + 1)
+      const b1: BigInt = b._subOne(false);
+      return BigInt._xor(a, b1)._addOne(true);
+    }
+  }
+
+  // unsigned bitwise AND
+  private static _and(a: BigInt, b: BigInt): BigInt {
+    const numPairs: i32 = a.n < b.n ? a.n : b.n;
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      numPairs,
+      false,
+      numPairs
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] & b.d[i];
+    }
+    return res;
+  }
+
+  // sort of an unsigned bitwise AND NOT (i.e. a & ~b)
+  // see: https://github.com/GoogleChromeLabs/jsbi/blob/d66a968b1e20b8c070051f25d9578291cb01ad2b/lib/jsbi.ts#L1268
+  private _andNot(other: BigInt): BigInt {
+    const numPairs: i32 = this.n < other.n ? this.n : other.n;
+    const res: BigInt = BigInt.getEmptyResultContainer(this.n, false, this.n);
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = this.d[i] & ~other.d[i];
+    }
+    for (; i < this.n; i++) {
+      res.d[i] = this.d[i]; // TODO: this seems wrong. this is more of an OR thing
+    }
+    return res;
+  }
+
+  // unsigned bitwise OR
+  private static _or(a: BigInt, b: BigInt): BigInt {
+    let numPairs: i32;
+    let resLength: i32;
+    if (a.n > b.n) {
+      numPairs = b.n;
+      resLength = a.n;
+    } else {
+      numPairs = a.n;
+      resLength = b.n;
+    }
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      resLength,
+      false,
+      resLength
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] | b.d[i];
+    }
+    for (; i < a.n; i++) {
+      res.d[i] = a.d[i];
+    }
+    for (; i < b.n; i++) {
+      res.d[i] = b.d[i];
+    }
+    return res;
+  }
+
+  // unsigned bitwise XOR
+  private static _xor(a: BigInt, b: BigInt): BigInt {
+    let numPairs: i32;
+    let resLength: i32;
+    if (a.n > b.n) {
+      numPairs = b.n;
+      resLength = a.n;
+    } else {
+      numPairs = a.n;
+      resLength = b.n;
+    }
+    const res: BigInt = BigInt.getEmptyResultContainer(
+      resLength,
+      false,
+      resLength
+    );
+
+    let i = 0;
+    for (; i < numPairs; i++) {
+      res.d[i] = a.d[i] ^ b.d[i];
+    }
+    for (; i < a.n; i++) {
+      res.d[i] = a.d[i];
+    }
+    for (; i < b.n; i++) {
+      res.d[i] = b.d[i];
+    }
+    return res;
   }
 
   // UTILITY ///////////////////////////////////////////////////////////////////////////////////////////////////////////
