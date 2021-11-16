@@ -1,7 +1,6 @@
-import {BigInt} from "../BigInt";
+import { BigInt } from "../BigInt";
 
 describe("Comparison operations", () => {
-
   it("Compares equal positive numbers", () => {
     // equals
     const intA = "100000000000000000000000000000000000000000000000000";
