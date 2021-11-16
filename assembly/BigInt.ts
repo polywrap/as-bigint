@@ -1298,33 +1298,21 @@ export class BigInt {
     return left.mod(right);
   }
 
+  // note: the right-hand operand must be a positive integer that fits in an i32
   @operator("**")
   private static powOp(left: BigInt, right: BigInt): BigInt {
-    if (right.n > 1) {
-      throw new RangeError(
-        "Operator overload ** is not supported for right-hand operand values outside the range 0 to 268435455"
-      );
-    }
     return left.pow(right.toInt32());
   }
 
+  // note: the right-hand operand must be a positive integer that fits in an i32
   @operator("<<")
   private static mulPowTwo(left: BigInt, right: BigInt): BigInt {
-    if (right.n > 1) {
-      throw new RangeError(
-        "Operator overload << is not supported for right-hand operand values outside the range 0 to 268435455"
-      );
-    }
     return left.mulPowTwo(right.toInt32());
   }
 
+  // note: the right-hand operand must be a positive integer that fits in an i32
   @operator(">>")
   private static divPowTwo(left: BigInt, right: BigInt): BigInt {
-    if (right.n > 1) {
-      throw new RangeError(
-        "Operator overload >> is not supported for right-hand operand values outside the range 0 to 268435455"
-      );
-    }
     return left.divPowTwo(right.toInt32());
   }
 }

@@ -108,6 +108,8 @@ Modular reduction | N/A | Not implemented
 Random number generation | N/A | Not implemented
 Cryptographic functions | N/A | Not implemented
 
+Note that operator overloads `<<`, `>>`, and `**` only support right-hand operands that are positive integers and that fit in an i32--i.e. between the range (0, 2147483647].
+
 ### TODO List
 *Priority based on blockchain-related use case; 1 is highest priority, 5 is lowest*
 Task | Description | Priority

@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/polywrap/as-bigint.git"
   },
-  "version": "0.3.1",
+  "version": "0.3.2",
   "types": "assembly/index.ts",
   "releaseFiles": [
     "assembly/",
