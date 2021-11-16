@@ -196,14 +196,14 @@ export class BigInt {
   }
 
   toInt32(): i32 {
+    if (this.n <= 1) {
+      return this.n == 0 ? <i32>0 : <i32>this.d[0] * (this.isNeg ? -1 : 1);
+    }
     const bitCount: i32 = this.countBits();
     if (bitCount > 32) {
       throw new Error(
         `Integer overflow: cannot output i32 from an integer that uses ${bitCount} bits`
       );
-    }
-    if (bitCount <= 28) {
-      return <i32>this.d[0] * (this.isNeg ? -1 : 1);
     }
     const biString: string = this.toString();
     const result: i32 = I32.parseInt(biString);
@@ -214,14 +214,14 @@ export class BigInt {
   }
 
   toInt64(): i64 {
+    if (this.n <= 1) {
+      return this.n == 0 ? <i64>0 : <i64>this.d[0] * (this.isNeg ? -1 : 1);
+    }
     const bitCount: i32 = this.countBits();
     if (bitCount > 64) {
       throw new Error(
         `Integer overflow: cannot output i64 from an integer that uses ${bitCount} bits`
       );
-    }
-    if (bitCount <= 28) {
-      return <i64>this.d[0] * (this.isNeg ? -1 : 1);
     }
     const biString: string = this.toString();
     const result: i64 = I64.parseInt(biString);
@@ -232,33 +232,33 @@ export class BigInt {
   }
 
   toUInt32(): u32 {
+    if (this.isNeg) {
+      throw new Error("Cannot cast negative integer to u32");
+    }
+    if (this.n <= 1) {
+      return this.n == 0 ? <u32>0 : <u32>this.d[0];
+    }
     const bitCount: i32 = this.countBits();
     if (bitCount > 32) {
       throw new Error(
         `Integer overflow: cannot output u32 from an integer that uses ${bitCount} bits`
       );
     }
-    if (this.isNeg) {
-      throw new Error("Cannot cast negative integer to u32");
-    }
-    if (bitCount <= 28) {
-      return this.d[0];
-    }
     return U32.parseInt(this.toString());
   }
 
   toUInt64(): u64 {
+    if (this.isNeg) {
+      throw new Error("Cannot cast negative integer to u64");
+    }
+    if (this.n <= 1) {
+      return this.n == 0 ? <u64>0 : <u64>this.d[0];
+    }
     const bitCount: i32 = this.countBits();
     if (bitCount > 64) {
       throw new Error(
         `Integer overflow: cannot output u64 from an integer that uses ${bitCount} bits`
       );
-    }
-    if (this.isNeg) {
-      throw new Error("Cannot cast negative integer to u64");
-    }
-    if (bitCount <= 28) {
-      return <u64>this.d[0];
     }
     return U64.parseInt(this.toString());
   }
@@ -1305,8 +1305,7 @@ export class BigInt {
         "Operator overload ** is not supported for right-hand operand values outside the range 0 to 268435455"
       );
     }
-    const e: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
-    return left.pow(e);
+    return left.pow(right.toInt32());
   }
 
   @operator("<<")
@@ -1316,8 +1315,7 @@ export class BigInt {
         "Operator overload << is not supported for right-hand operand values outside the range 0 to 268435455"
       );
     }
-    const k: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
-    return left.mulPowTwo(k);
+    return left.mulPowTwo(right.toInt32());
   }
 
   @operator(">>")
@@ -1327,7 +1325,6 @@ export class BigInt {
         "Operator overload >> is not supported for right-hand operand values outside the range 0 to 268435455"
       );
     }
-    const k: i32 = <i32>right.d[0] * (right.isNeg ? -1 : 1);
-    return left.divPowTwo(k);
+    return left.divPowTwo(right.toInt32());
   }
 }
