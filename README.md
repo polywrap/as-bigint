@@ -27,7 +27,7 @@ const a: BigInt = BigInt.fromString("1937452973498789263453092752873906032797290
 // fromString and toString methods optionally take a radix argument
 const b: BigInt = BigInt.fromString("9F59E5Ed123C10D57E92629612511b14628D2799", 16);
 
-// arithmetic
+// arithmetic (operator overloads: +, -, *, /, %, **)
 const sum: BigInt = a.add(b);
 const difference: BigInt = a.sub(b);
 const product: BigInt = a.mul(b);
@@ -44,13 +44,13 @@ const intProduct: BigInt = a.mulInt(c); // mulInt only supports 28 bit intger ar
 const intQuotient: BigInt = a.divInt(c);
 const intRemainder: BigInt = a.modInt(c);
 
-// arithmetic bit shifts
+// arithmetic bit shifts (operator overloads: <<, >>)
 const shiftLeft: BigInt = a.mul2();
 const shiftLeft3bits: BigInt = a.mulPowTwo(3);
 const shiftRight: BigInt = a.div2();
 const shiftRight4bits: BigInt = a.divPowTwo(4);
 
-// comparison operations
+// comparison operations (operator overloads: ==, !=, <, <=, >, >=)
 const isEqual: boolean = a.eq(b);
 const isNotEqual: boolean = a.ne(b);
 const isLessThan: boolean = a.lt(b);
@@ -77,6 +77,18 @@ const one: BigInt = BigInt.ONE;
 const verySmall: BigInt = BigInt.fromUInt16(65535);
 const prettySmall: BigInt = BigInt.fromUInt32(4294967295);
 const stillSmall: BigInt = BigInt.fromUInt64(18446744073709551615);
+
+// output to integers
+const myInt32: i32 = BigInt.toInt32();
+const myInt64: i64 = BigInt.toInt64();
+const myUInt32: u32 = BigInt.toUInt32();
+const myUInt64: u64 = BigInt.toUInt64();
+
+// bitwise operations (operator overloads: ~, &, |, ^)
+const not: BigInt = BigInt.bitwiseNot(bigIntA);
+const and: BigInt = BigInt.bitwiseAnd(bigIntA, bigIntB);
+const or: BigInt = BigInt.bitwiseOr(bigIntA, bigIntB);
+const xor: BigInt = BigInt.bitwiseXor(bigIntA, bigIntB);
 ```
 
 ## Development Status & Roadmap
