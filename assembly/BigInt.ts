@@ -33,6 +33,9 @@ export class BigInt {
     if (radix < 2 || radix > 16) {
       throw new RangeError("BigInt only reads strings of radix 2 through 16");
     }
+    if (radix == 16 && bigInteger.startsWith("0x")) {
+      bigInteger = bigInteger.substring(2);
+    }
     let i: i32 = 0;
     let isNegative: boolean = false;
     if (bigInteger.charAt(0) == "-") {
