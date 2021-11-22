@@ -348,6 +348,14 @@ describe("BigInt: Arithmetic", () => {
     expect(biV.roundedDiv(biW).toString()).toStrictEqual("0");
     expect(biV.roundedDivInt(intW).toString()).toStrictEqual("0");
 
+    // negative numerator; ends in 0.5 -> rounds up
+    const intX = "-5";
+    const intY: u32 = 10;
+    const biX = BigInt.fromString(intX);
+    const biY = BigInt.fromUInt32(intY);
+    expect(biX.roundedDiv(biY).toString()).toStrictEqual("-1");
+    expect(biX.roundedDivInt(intY).toString()).toStrictEqual("-1");
+
     // divide by zero
     const divByZero = (): void => {
       const nonZero = BigInt.fromString(
