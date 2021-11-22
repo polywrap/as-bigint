@@ -310,6 +310,28 @@ describe("BigInt: Arithmetic", () => {
       "23975"
     );
 
+    // negative numerator; ends in 0.6 -> rounds up
+    const intN = "-34534353535397";
+    const intO: u32 = U32.MAX_VALUE;
+    const biN = BigInt.fromString(intN);
+    const biO = BigInt.fromUInt32(intO);
+    expect(biN.roundedDiv(biO).toString()).toStrictEqual("-8041");
+    expect(biN.roundedDivInt(intO).toString()).toStrictEqual("-8041");
+
+    // negative denominator; ends in 0.52 -> rounds up
+    const intR = "34534353535397972";
+    const intS: string = I32.MIN_VALUE.toString();
+    const biR = BigInt.fromString(intR);
+    const biS = BigInt.fromString(intS);
+    expect(biR.roundedDiv(biS).toString()).toStrictEqual("-16081312");
+
+    // negative numerator and denominator; ends in 0.52 -> rounds up
+    const intP = "-34534353535397972";
+    const intQ: string = I32.MIN_VALUE.toString();
+    const biP = BigInt.fromString(intP);
+    const biQ = BigInt.fromString(intQ);
+    expect(biP.roundedDiv(biQ).toString()).toStrictEqual("16081312");
+
     // divide by zero
     const divByZero = (): void => {
       const nonZero = BigInt.fromString(

@@ -885,25 +885,6 @@ export class BigInt {
     return this.add(r).div(other);
   }
 
-  // divides and rounds to nearest integer
-  // roundedDiv(other: BigInt): BigInt {
-  //   if (other.eq(BigInt.fromUInt16(0))) {
-  //     throw new Error("Divide by zero");
-  //   }
-  //   let n: BigInt = this;
-  //   let d: BigInt = other;
-  //   if (d.isNeg) {
-  //     n = n.opposite();
-  //     d = d.opposite();
-  //   }
-  //   const adj: BigInt = (n.isNeg ? d.subInt(1) : d).div2();
-  //   const res: BigInt = n.abs().add(adj).div(d);
-  //   if (this.isNeg) {
-  //     res.isNeg = !res.isNeg;
-  //   }
-  //   return res;
-  // }
-
   // SINGLE-DIGIT HELPERS //////////////////////////////////////////////////////////////////////////////////////////////
 
   addInt(b: u32): BigInt {
@@ -1038,8 +1019,11 @@ export class BigInt {
     if (this.isZero()) {
       return BigInt.fromUInt16(0);
     }
-    const r: u32 = (this.isNeg ? -1 : 1) * (b >> 1);
-    return this.add(BigInt.fromUInt32(r)).divInt(b);
+    const r: BigInt = BigInt.fromUInt32(b >> 1);
+    if (this.isNeg) {
+      r.isNeg = true;
+    }
+    return this.add(r).divInt(b);
   }
 
   // BITWISE OPERATIONS ////////////////////////////////////////////////////////////////////////////////////////////////
