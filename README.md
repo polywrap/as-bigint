@@ -35,6 +35,7 @@ const quotient: BigInt = a.div(b);
 const remainder: BigInt = a.mod(b);
 const squareRoot: BigInt = a.sqrt();
 const cubed: BigInt = a.pow(3);
+const roundedQuotient: BigInt = a.roundedDiv(b);
 
 // faster operations when right-side variable is a 32 bit unsigned integer:
 const c: u32 = 1234;
@@ -43,6 +44,7 @@ const intDifference: BigInt = a.subInt(c);
 const intProduct: BigInt = a.mulInt(c); // mulInt only supports 28 bit intger arguments (max value: 268435456)
 const intQuotient: BigInt = a.divInt(c);
 const intRemainder: BigInt = a.modInt(c);
+const intRoundedQuotient: BigInt = a.roundedDivInt(c);
 
 // arithmetic bit shifts (operator overloads: <<, >>)
 const shiftLeft: BigInt = a.mul2();
