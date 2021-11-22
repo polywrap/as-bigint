@@ -318,6 +318,13 @@ describe("BigInt: Arithmetic", () => {
     expect(biN.roundedDiv(biO).toString()).toStrictEqual("-8041");
     expect(biN.roundedDivInt(intO).toString()).toStrictEqual("-8041");
 
+    // negative numerator and denominator; ends in 0.52 -> rounds up
+    const intP = "-34534353535397972";
+    const intQ: string = I32.MIN_VALUE.toString();
+    const biP = BigInt.fromString(intP);
+    const biQ = BigInt.fromString(intQ);
+    expect(biP.roundedDiv(biQ).toString()).toStrictEqual("16081312");
+
     // negative denominator; ends in 0.52 -> rounds up
     const intR = "34534353535397972";
     const intS: string = I32.MIN_VALUE.toString();
@@ -325,12 +332,21 @@ describe("BigInt: Arithmetic", () => {
     const biS = BigInt.fromString(intS);
     expect(biR.roundedDiv(biS).toString()).toStrictEqual("-16081312");
 
-    // negative numerator and denominator; ends in 0.52 -> rounds up
-    const intP = "-34534353535397972";
-    const intQ: string = I32.MIN_VALUE.toString();
-    const biP = BigInt.fromString(intP);
-    const biQ = BigInt.fromString(intQ);
-    expect(biP.roundedDiv(biQ).toString()).toStrictEqual("16081312");
+    // negative numerator; ends in 0.6 -> rounds up
+    const intT = "-6";
+    const intU: u32 = 10;
+    const biT = BigInt.fromString(intT);
+    const biU = BigInt.fromUInt32(intU);
+    expect(biT.roundedDiv(biU).toString()).toStrictEqual("-1");
+    expect(biT.roundedDivInt(intU).toString()).toStrictEqual("-1");
+
+    // negative numerator; ends in 0.4 -> rounds down
+    const intV = "-4";
+    const intW: u32 = 10;
+    const biV = BigInt.fromString(intV);
+    const biW = BigInt.fromUInt32(intW);
+    expect(biV.roundedDiv(biW).toString()).toStrictEqual("0");
+    expect(biV.roundedDivInt(intW).toString()).toStrictEqual("0");
 
     // divide by zero
     const divByZero = (): void => {
