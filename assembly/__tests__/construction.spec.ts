@@ -1,7 +1,5 @@
 import { BigInt } from "../BigInt";
 
-// TODO: test radix N input and output
-
 describe("String Construction", () => {
   it("Constructs from radix 10 strings", () => {
     // constructor with small integer
@@ -25,6 +23,21 @@ describe("String Construction", () => {
     const bigIntBigStrNeg = BigInt.fromString(bigStrNeg);
     expect(bigIntBigStrNeg.toString()).toStrictEqual(bigStrNeg);
     expect(bigIntBigStrNeg.isNegative).toStrictEqual(true);
+  });
+
+  it("Constructs from radix 16 strings", () => {
+    const hexStr: string = "6AA50BC48CA";
+    const biHex: BigInt = BigInt.fromString(hexStr, 16);
+    const expected: string = U64.parseInt(hexStr, 16).toString();
+    expect(biHex.toString()).toStrictEqual(expected);
+
+    const hexStr0x: string = "0x6AA50BC48CA";
+    const biHex0x: BigInt = BigInt.fromString(hexStr0x, 16);
+    const expected0x: string = U64.parseInt(
+      hexStr0x.substring(2),
+      16
+    ).toString();
+    expect(biHex0x.toString()).toStrictEqual(expected0x);
   });
 });
 

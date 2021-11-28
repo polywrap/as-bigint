@@ -22,10 +22,13 @@ or
 import { BigInt } from "as-bigint"
 
 // read BigInt from string
-const a: BigInt = BigInt.fromString("193745297349878926345309275287390603279729047130943891478958917983475091793475173497590134709571089374907109387571937458034975817093477309837980579034797");
+const a: BigInt = BigInt.fromString("19374529734987892634530927528739060327972904713094389147895891798347509179347517");
 
 // fromString and toString methods optionally take a radix argument
 const b: BigInt = BigInt.fromString("9F59E5Ed123C10D57E92629612511b14628D2799", 16);
+
+// for hex strings, a radix argument is not required if value is prefixed by 0x (or -0x for negative numbers)
+const fromHex: BigInt = BigInt.fromString("0x9F59E5Ed123C10D57E92629612511b14628D2799");
 
 // arithmetic (operator overloads: +, -, *, /, %, **)
 const sum: BigInt = a.add(b);
@@ -35,6 +38,7 @@ const quotient: BigInt = a.div(b);
 const remainder: BigInt = a.mod(b);
 const squareRoot: BigInt = a.sqrt();
 const cubed: BigInt = a.pow(3);
+const roundedQuotient: BigInt = a.roundedDiv(b);
 
 // faster operations when right-side variable is a 32 bit unsigned integer:
 const c: u32 = 1234;
@@ -43,12 +47,23 @@ const intDifference: BigInt = a.subInt(c);
 const intProduct: BigInt = a.mulInt(c); // mulInt only supports 28 bit intger arguments (max value: 268435456)
 const intQuotient: BigInt = a.divInt(c);
 const intRemainder: BigInt = a.modInt(c);
+const intRoundedQuotient: BigInt = a.roundedDivInt(c);
 
-// arithmetic bit shifts (operator overloads: <<, >>)
-const shiftLeft: BigInt = a.mul2();
-const shiftLeft3bits: BigInt = a.mulPowTwo(3);
-const shiftRight: BigInt = a.div2();
-const shiftRight4bits: BigInt = a.divPowTwo(4);
+// fast multiply and divide by 2 or power of 2
+const mulByTwo: BigInt = a.mul2();
+const mulByEight: BigInt = a.mulPowTwo(3);
+const divBuTwo: BigInt = a.div2();
+const divBySixteen: BigInt = a.divPowTwo(4);
+
+// signed arithmetic bit shifts (operator overloads: <<, >>)
+const shiftLeft3bits: BigInt = a.leftShift(3);
+const shiftRight4bits: BigInt = a.rightShift(4);
+
+// bitwise operations (operator overloads: ~, &, |, ^)
+const not: BigInt = BigInt.bitwiseNot(bigIntA);
+const and: BigInt = BigInt.bitwiseAnd(bigIntA, bigIntB);
+const or: BigInt = BigInt.bitwiseOr(bigIntA, bigIntB);
+const xor: BigInt = BigInt.bitwiseXor(bigIntA, bigIntB);
 
 // comparison operations (operator overloads: ==, !=, <, <=, >, >=)
 const isEqual: boolean = a.eq(b);
@@ -83,12 +98,6 @@ const myInt32: i32 = BigInt.toInt32();
 const myInt64: i64 = BigInt.toInt64();
 const myUInt32: u32 = BigInt.toUInt32();
 const myUInt64: u64 = BigInt.toUInt64();
-
-// bitwise operations (operator overloads: ~, &, |, ^)
-const not: BigInt = BigInt.bitwiseNot(bigIntA);
-const and: BigInt = BigInt.bitwiseAnd(bigIntA, bigIntB);
-const or: BigInt = BigInt.bitwiseOr(bigIntA, bigIntB);
-const xor: BigInt = BigInt.bitwiseXor(bigIntA, bigIntB);
 ```
 
 ## Development Status & Roadmap
@@ -108,7 +117,7 @@ Modular reduction | N/A | Not implemented
 Random number generation | N/A | Not implemented
 Cryptographic functions | N/A | Not implemented
 
-Note that operator overloads `<<`, `>>`, and `**` only support right-hand operands that are positive integers and that fit in an i32--i.e. between the range (0, 2147483647].
+Note that operator overloads `<<`, `>>`, and `**` only support right-hand operands that fit in an i32--i.e. between the range (0, 2147483647].
 
 ### TODO List
 *Priority based on blockchain-related use case; 1 is highest priority, 5 is lowest*

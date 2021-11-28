@@ -82,14 +82,14 @@ describe("Operator overloads", () => {
     const biA = BigInt.fromString("238723509723496846245754754");
     const biB = BigInt.fromString("3");
     // @ts-ignore
-    expect(biA.mulPowTwo(3).toString()).toStrictEqual((biA << biB).toString());
+    expect(biA.leftShift(3).toString()).toStrictEqual((biA << biB).toString());
   });
 
   it(">>", () => {
     const biA = BigInt.fromString("238723509723496846245754754");
     const biB = BigInt.fromString("3");
     // @ts-ignore
-    expect(biA.divPowTwo(3).toString()).toStrictEqual((biA >> biB).toString());
+    expect(biA.rightShift(3).toString()).toStrictEqual((biA >> biB).toString());
   });
 
   it("**", () => {

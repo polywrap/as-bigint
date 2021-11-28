@@ -14,10 +14,12 @@ export class BigInt {
   // private static readonly doubleActualBits: i32 = 64 // 2 * BigIntMP.actualBits -> "double precision" actual bits
   private static readonly maxComba: i32 = 256; // 2^(doubleActualBits - 2 * p) = 2^8 = 256
 
-  private static readonly digitMask: u32 =
-    ((<u32>1) << (<u32>BigInt.p)) - <u32>1; // mask p least significant bits
+  private static readonly digitMask: u32 = <u32>((1 << BigInt.p) - 1); // mask p least significant bits
 
   private static readonly precision: i32 = 5; // base array size fits 140 bit integers
+
+  // private static readonly maxBits: i32 = I32.MAX_VALUE;
+  // private static readonly maxN: i32 = BigInt.maxBits / BigInt.p;
 
   // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +40,14 @@ export class BigInt {
     if (bigInteger.charAt(0) == "-") {
       i++;
       isNegative = true;
+    }
+    if (
+      (radix == 16 || radix == 10) &&
+      bigInteger.charAt(i) == "0" &&
+      bigInteger.charAt(i + 1) == "x"
+    ) {
+      i += 2;
+      radix = 16;
     }
     let res: BigInt = BigInt.fromUInt16(0);
     const radixU: u16 = <u16>radix;
@@ -546,7 +556,7 @@ export class BigInt {
     // shift by k % p bits
     const remK: i32 = k % BigInt.p;
     if (remK != 0) {
-      const mask: u32 = ((<u32>1) << remK) - <u32>1;
+      const mask: u32 = <u32>((1 << remK) - 1);
       const shift: i32 = BigInt.p - remK;
       let r: u32 = 0;
       for (let i = 0; i < res.n; i++) {
@@ -564,7 +574,7 @@ export class BigInt {
   // divide by power of 2
   divPowTwo(k: i32): BigInt {
     const res = this.copy();
-    if (k == 0) {
+    if (k <= 0) {
       return res;
     }
     if (k >= BigInt.p) {
@@ -572,7 +582,7 @@ export class BigInt {
     }
     const remK: i32 = k % BigInt.p;
     if (remK != 0) {
-      const mask: u32 = ((<u32>1) << remK) - <u32>1;
+      const mask: u32 = <u32>((1 << remK) - 1);
       const shift: i32 = BigInt.p - remK;
       let r: u32 = 0;
       for (let i = res.n - 1; i >= 0; i--) {
@@ -608,6 +618,193 @@ export class BigInt {
     res.trimLeadingZeros();
     return res;
   }
+
+  // left bit shift
+  leftShift(k: i32): BigInt {
+    if (k == 0) return this.copy();
+    if (k < 0) return this.rightShiftByAbsolute(k);
+    return this.leftShiftByAbsolute(k);
+  }
+
+  // signed right bit shift
+  rightShift(k: i32): BigInt {
+    if (k == 0) return this.copy();
+    if (k < 0) return this.leftShiftByAbsolute(k);
+    return this.rightShiftByAbsolute(k);
+  }
+
+  private leftShiftByAbsolute(k: i32): BigInt {
+    return this.mulPowTwo(k >>> 0);
+  }
+
+  private rightShiftByAbsolute(k: i32): BigInt {
+    const shift: i32 = k >>> 0;
+    // shift by max if result would equal 0
+    if (this.n - shift / BigInt.p <= 0) {
+      return BigInt.rightShiftByMaximum(this.isNeg);
+    }
+    // arithmetic shift
+    const res: BigInt = this.divPowTwo(shift);
+    // for negative numbers, round down if a bit would be shifted out
+    // Since the result is negative, rounding down means adding one to its absolute value. This cannot overflow.
+    if (this.rightShiftMustRoundDown(shift)) {
+      return res._addOne(true);
+    }
+    return res;
+  }
+
+  // For negative numbers, round down if any bit was shifted out (so that
+  // e.g. -5n >> 1n == -3n and not -2n). Check now whether this will happen
+  // and whether it can cause overflow into a new digit. If we allocate the
+  // result large enough up front, it avoids having to do grow it later.
+  private rightShiftMustRoundDown(k: i32): boolean {
+    if (this.isNeg) {
+      const digitShift: i32 = k / BigInt.p;
+      const remK: i32 = k % BigInt.p;
+      const mask: u32 = <u32>((1 << remK) - 1);
+      if ((this.d[digitShift] & mask) != 0) {
+        return true;
+      } else {
+        for (let i = 0; i < digitShift; i++) {
+          if (this.d[i] != 0) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  private static rightShiftByMaximum(isNeg: boolean): BigInt {
+    if (isNeg) {
+      return BigInt.NEG_ONE;
+    }
+    return BigInt.ZERO;
+  }
+
+  // based on Google's JSBI: https://github.com/GoogleChromeLabs/jsbi/blob/main/lib/jsbi.ts#L303
+  // private leftShiftByAbsolute(k: i32): BigInt {
+  //   const shift: i32 = BigInt.toShiftAmount(k);
+  //   if (shift < 0) {
+  //     throw new RangeError("BigInt would exceed maximize size");
+  //   }
+  //   const digitShift: i32 = (shift / BigInt.p) | 0;
+  //   const remK: i32 = shift % BigInt.p;
+  //   const grow: boolean =
+  //     remK != 0 && this.d[this.n - 1] >>> (BigInt.p - remK) != 0;
+  //   const resultLength = this.n + digitShift + (grow ? 1 : 0);
+  //   const res: BigInt = BigInt.getEmptyResultContainer(
+  //     resultLength,
+  //     this.isNeg,
+  //     resultLength
+  //   );
+  //
+  //   // shift by entire digits
+  //   for (let i = 0; i < digitShift; i++) {
+  //     res.d[i] = 0;
+  //   }
+  //   if (remK === 0) {
+  //     for (let i = digitShift; i < resultLength; i++) {
+  //       res.d[i] = this.d[i - digitShift];
+  //     }
+  //   } else {
+  //     // shift by k % p bits
+  //     const shift: i32 = BigInt.p - remK;
+  //     let carry = 0;
+  //     for (let i = 0; i < this.n; i++) {
+  //       const d: u32 = this.d[i];
+  //       res.d[i + digitShift] = ((d << remK) & BigInt.digitMask) | carry;
+  //       carry = d >>> shift;
+  //     }
+  //     if (grow) {
+  //       res.d[this.n + digitShift] = carry;
+  //     } else if (carry !== 0) {
+  //       throw new Error("implementation bug");
+  //     }
+  //   }
+  //
+  //   res.trimLeadingZeros();
+  //   return res;
+  // }
+
+  // based on Google's JSBI: https://github.com/GoogleChromeLabs/jsbi/blob/main/lib/jsbi.ts#L303
+  // private rightShiftByAbsolute(k: i32): BigInt {
+  //   const shift: i32 = BigInt.toShiftAmount(k);
+  //   if (shift < 0) {
+  //     return BigInt.rightShiftByMaximum(this.isNeg);
+  //   }
+  //   const digitShift: i32 = shift / BigInt.p;
+  //   const remK: i32 = shift % BigInt.p;
+  //
+  //   let resultLength: i32 = this.n - digitShift;
+  //   if (resultLength <= 0) {
+  //     return BigInt.rightShiftByMaximum(this.isNeg);
+  //   }
+  //   // For negative numbers, round down if any bit was shifted out (so that
+  //   // e.g. -5n >> 1n == -3n and not -2n). Check now whether this will happen
+  //   // and whether it can cause overflow into a new digit. If we allocate the
+  //   // result large enough up front, it avoids having to do grow it later.
+  //   let mustRoundDown = false;
+  //   if (this.isNeg) {
+  //     const mask: u32 = <u32>((1 << remK) - 1);
+  //     if ((this.d[digitShift] & mask) !== 0) {
+  //       mustRoundDown = true;
+  //     } else {
+  //       for (let i = 0; i < digitShift; i++) {
+  //         if (this.d[i] !== 0) {
+  //           mustRoundDown = true;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   // If bitsShift is non-zero, it frees up bits, preventing overflow.
+  //   if (mustRoundDown && remK === 0) {
+  //     // Overflow cannot happen if the most significant digit has unset bits.
+  //     const msd: u32 = this.d[this.n - 1];
+  //     const roundingCanOverflow = ~msd === 0;
+  //     if (roundingCanOverflow) {
+  //       resultLength++;
+  //     }
+  //   }
+  //   let res: BigInt = BigInt.getEmptyResultContainer(
+  //     resultLength,
+  //     this.isNeg,
+  //     resultLength
+  //   );
+  //
+  //   if (remK === 0) {
+  //     // Zero out any overflow digit (see "roundingCanOverflow" above).
+  //     res.d[resultLength - 1] = 0;
+  //     for (let i = digitShift; i < this.n; i++) {
+  //       res.d[i - digitShift] = this.d[i];
+  //     }
+  //   } else {
+  //     let carry: u32 = this.d[digitShift] >>> remK;
+  //     const last: i32 = this.n - digitShift - 1;
+  //     for (let i = 0; i < last; i++) {
+  //       const d = this.d[i + digitShift + 1];
+  //       res.d[i] = ((d << (BigInt.p - remK)) & BigInt.digitMask) | carry;
+  //       carry = d >>> remK;
+  //     }
+  //     res.d[last] = carry;
+  //   }
+  //   if (mustRoundDown) {
+  //     // Since the result is negative, rounding down means adding one to its
+  //     // absolute value. This cannot overflow.
+  //     res = res._addOne(true);
+  //   }
+  //   res.trimLeadingZeros();
+  //   return res;
+  // }
+
+  // private static toShiftAmount(k: i32): i32 {
+  //   const value: i32 = k >>> 0;
+  //   if (value > BigInt.maxBits) {
+  //     return -1;
+  //   }
+  //   return value;
+  // }
 
   // MULTIPLICATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -707,6 +904,31 @@ export class BigInt {
     const res1 = this.div(res);
     return res.lt(res1) ? res : res1;
   }
+
+  // alternative sqrt method used in uniswap v3 sdk -> is this faster?
+  // https://github.com/Uniswap/sdk-core/blob/main/src/utils/sqrt.ts
+  // sqrt(value: BigInt): BigInt {
+  //   if (value < BigInt.ZERO) {
+  //     throw new Error("cannot calculate square root of negative number");
+  //   }
+  //
+  //   // rely on built in sqrt if possible
+  //   if (value <= BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER)) {
+  //     const fVal: f64 = <f64>value.toUInt64();
+  //     const fSqrt: f64 = Math.floor(Math.sqrt(fVal));
+  //     return BigInt.fromUInt64(<u64>fSqrt);
+  //   }
+  //
+  //   let z: BigInt;
+  //   let x: BigInt;
+  //   z = value;
+  //   x = value.div2().add(BigInt.ONE);
+  //   while (x < z) {
+  //     z = x;
+  //     x = value.div(x).add(x).div2();
+  //   }
+  //   return z;
+  // }
 
   // DIVISION //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -885,25 +1107,6 @@ export class BigInt {
     return this.add(r).div(other);
   }
 
-  // divides and rounds to nearest integer
-  // roundedDiv(other: BigInt): BigInt {
-  //   if (other.eq(BigInt.fromUInt16(0))) {
-  //     throw new Error("Divide by zero");
-  //   }
-  //   let n: BigInt = this;
-  //   let d: BigInt = other;
-  //   if (d.isNeg) {
-  //     n = n.opposite();
-  //     d = d.opposite();
-  //   }
-  //   const adj: BigInt = (n.isNeg ? d.subInt(1) : d).div2();
-  //   const res: BigInt = n.abs().add(adj).div(d);
-  //   if (this.isNeg) {
-  //     res.isNeg = !res.isNeg;
-  //   }
-  //   return res;
-  // }
-
   // SINGLE-DIGIT HELPERS //////////////////////////////////////////////////////////////////////////////////////////////
 
   addInt(b: u32): BigInt {
@@ -1038,8 +1241,11 @@ export class BigInt {
     if (this.isZero()) {
       return BigInt.fromUInt16(0);
     }
-    const r: u32 = (this.isNeg ? -1 : 1) * (b >> 1);
-    return this.add(BigInt.fromUInt32(r)).divInt(b);
+    const r: BigInt = BigInt.fromUInt32(b >> 1);
+    if (this.isNeg) {
+      r.isNeg = true;
+    }
+    return this.add(r).divInt(b);
   }
 
   // BITWISE OPERATIONS ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1242,12 +1448,21 @@ export class BigInt {
 
   // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // BigInt with value 0
   static get ZERO(): BigInt {
     return BigInt.fromUInt16(0);
   }
 
+  // BigInt with value 1
   static get ONE(): BigInt {
     return BigInt.fromUInt16(1);
+  }
+
+  // BigInt with value -1
+  static get NEG_ONE(): BigInt {
+    const res: BigInt = BigInt.fromUInt16(1);
+    res.isNeg = true;
+    return res;
   }
 
   static eq(left: BigInt, right: BigInt): boolean {
@@ -1306,13 +1521,13 @@ export class BigInt {
 
   // note: the right-hand operand must be a positive integer that fits in an i32
   @operator("<<")
-  private static mulPowTwo(left: BigInt, right: BigInt): BigInt {
-    return left.mulPowTwo(right.toInt32());
+  private static leftShift(left: BigInt, right: BigInt): BigInt {
+    return left.leftShift(right.toInt32());
   }
 
   // note: the right-hand operand must be a positive integer that fits in an i32
   @operator(">>")
-  private static divPowTwo(left: BigInt, right: BigInt): BigInt {
-    return left.divPowTwo(right.toInt32());
+  private static rightShift(left: BigInt, right: BigInt): BigInt {
+    return left.rightShift(right.toInt32());
   }
 }
