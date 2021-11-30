@@ -31,6 +31,37 @@ export class BigInt {
     this.isNeg = isNegative;
   }
 
+  // generic constructor based on https://github.com/ttulka/as-big/blob/main/assembly/Big.ts#L84
+  /**
+   * Returns a new {BigInt} instance from generic type {T}.
+   *
+   * @param  n the number as {BigInt}, {string}, or {number}
+   * @return BigInt the new {BigInt} instance
+   */
+  static of<T>(n: T): BigInt {
+    if (n instanceof BigInt) return n;
+    // @ts-ignore
+    if (n instanceof string) return BigInt.fromString(n);
+    // @ts-ignore
+    if (n instanceof i8) return BigInt.fromInt16(<i16>n);
+    // @ts-ignore
+    if (n instanceof u8) return BigInt.fromUInt16(<u16>n);
+    // @ts-ignore
+    if (n instanceof i16) return BigInt.fromInt16(n);
+    // @ts-ignore
+    if (n instanceof u16) return BigInt.fromUInt16(n);
+    // @ts-ignore
+    if (n instanceof i32) return BigInt.fromInt32(n);
+    // @ts-ignore
+    if (n instanceof u32) return BigInt.fromUInt32(n);
+    // @ts-ignore
+    if (n instanceof i64) return BigInt.fromInt64(n);
+    // @ts-ignore
+    if (n instanceof u64) return BigInt.fromUInt64(n);
+
+    throw new TypeError("Unsupported generic type " + nameof<T>(n));
+  }
+
   static fromString(bigInteger: string, radix: i32 = 10): BigInt {
     if (radix < 2 || radix > 16) {
       throw new RangeError("BigInt only reads strings of radix 2 through 16");
@@ -100,6 +131,43 @@ export class BigInt {
     while (digit != 0) {
       res.d[i++] = (<u32>digit) & BigInt.digitMask;
       digit >>= BigInt.p;
+    }
+    res.n = i;
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  static fromInt16(digit: i16): BigInt {
+    const isNeg: boolean = digit < 0;
+    const res = new BigInt(BigInt.precision, isNeg);
+    const unsignedDigit: u16 = <u16>(isNeg ? -1 * digit : digit);
+    res.d[0] = (<u32>unsignedDigit) & BigInt.digitMask;
+    res.n = res.d[0] != 0 ? 1 : 0;
+    return res;
+  }
+
+  static fromInt32(digit: i32): BigInt {
+    const isNeg: boolean = digit < 0;
+    const res = new BigInt(BigInt.precision, isNeg);
+    let unsignedDigit: u32 = <u32>(isNeg ? -1 * digit : digit);
+    let i = 0;
+    while (unsignedDigit != 0) {
+      res.d[i++] = unsignedDigit & BigInt.digitMask;
+      unsignedDigit >>= BigInt.p;
+    }
+    res.n = i;
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  static fromInt64(digit: i64): BigInt {
+    const isNeg: boolean = digit < 0;
+    const res = new BigInt(BigInt.precision, isNeg);
+    let unsignedDigit: u64 = <u64>(isNeg ? -1 * digit : digit);
+    let i = 0;
+    while (unsignedDigit != 0) {
+      res.d[i++] = (<u32>unsignedDigit) & BigInt.digitMask;
+      unsignedDigit >>= BigInt.p;
     }
     res.n = i;
     res.trimLeadingZeros();
@@ -681,130 +749,6 @@ export class BigInt {
     }
     return BigInt.ZERO;
   }
-
-  // based on Google's JSBI: https://github.com/GoogleChromeLabs/jsbi/blob/main/lib/jsbi.ts#L303
-  // private leftShiftByAbsolute(k: i32): BigInt {
-  //   const shift: i32 = BigInt.toShiftAmount(k);
-  //   if (shift < 0) {
-  //     throw new RangeError("BigInt would exceed maximize size");
-  //   }
-  //   const digitShift: i32 = (shift / BigInt.p) | 0;
-  //   const remK: i32 = shift % BigInt.p;
-  //   const grow: boolean =
-  //     remK != 0 && this.d[this.n - 1] >>> (BigInt.p - remK) != 0;
-  //   const resultLength = this.n + digitShift + (grow ? 1 : 0);
-  //   const res: BigInt = BigInt.getEmptyResultContainer(
-  //     resultLength,
-  //     this.isNeg,
-  //     resultLength
-  //   );
-  //
-  //   // shift by entire digits
-  //   for (let i = 0; i < digitShift; i++) {
-  //     res.d[i] = 0;
-  //   }
-  //   if (remK === 0) {
-  //     for (let i = digitShift; i < resultLength; i++) {
-  //       res.d[i] = this.d[i - digitShift];
-  //     }
-  //   } else {
-  //     // shift by k % p bits
-  //     const shift: i32 = BigInt.p - remK;
-  //     let carry = 0;
-  //     for (let i = 0; i < this.n; i++) {
-  //       const d: u32 = this.d[i];
-  //       res.d[i + digitShift] = ((d << remK) & BigInt.digitMask) | carry;
-  //       carry = d >>> shift;
-  //     }
-  //     if (grow) {
-  //       res.d[this.n + digitShift] = carry;
-  //     } else if (carry !== 0) {
-  //       throw new Error("implementation bug");
-  //     }
-  //   }
-  //
-  //   res.trimLeadingZeros();
-  //   return res;
-  // }
-
-  // based on Google's JSBI: https://github.com/GoogleChromeLabs/jsbi/blob/main/lib/jsbi.ts#L303
-  // private rightShiftByAbsolute(k: i32): BigInt {
-  //   const shift: i32 = BigInt.toShiftAmount(k);
-  //   if (shift < 0) {
-  //     return BigInt.rightShiftByMaximum(this.isNeg);
-  //   }
-  //   const digitShift: i32 = shift / BigInt.p;
-  //   const remK: i32 = shift % BigInt.p;
-  //
-  //   let resultLength: i32 = this.n - digitShift;
-  //   if (resultLength <= 0) {
-  //     return BigInt.rightShiftByMaximum(this.isNeg);
-  //   }
-  //   // For negative numbers, round down if any bit was shifted out (so that
-  //   // e.g. -5n >> 1n == -3n and not -2n). Check now whether this will happen
-  //   // and whether it can cause overflow into a new digit. If we allocate the
-  //   // result large enough up front, it avoids having to do grow it later.
-  //   let mustRoundDown = false;
-  //   if (this.isNeg) {
-  //     const mask: u32 = <u32>((1 << remK) - 1);
-  //     if ((this.d[digitShift] & mask) !== 0) {
-  //       mustRoundDown = true;
-  //     } else {
-  //       for (let i = 0; i < digitShift; i++) {
-  //         if (this.d[i] !== 0) {
-  //           mustRoundDown = true;
-  //           break;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   // If bitsShift is non-zero, it frees up bits, preventing overflow.
-  //   if (mustRoundDown && remK === 0) {
-  //     // Overflow cannot happen if the most significant digit has unset bits.
-  //     const msd: u32 = this.d[this.n - 1];
-  //     const roundingCanOverflow = ~msd === 0;
-  //     if (roundingCanOverflow) {
-  //       resultLength++;
-  //     }
-  //   }
-  //   let res: BigInt = BigInt.getEmptyResultContainer(
-  //     resultLength,
-  //     this.isNeg,
-  //     resultLength
-  //   );
-  //
-  //   if (remK === 0) {
-  //     // Zero out any overflow digit (see "roundingCanOverflow" above).
-  //     res.d[resultLength - 1] = 0;
-  //     for (let i = digitShift; i < this.n; i++) {
-  //       res.d[i - digitShift] = this.d[i];
-  //     }
-  //   } else {
-  //     let carry: u32 = this.d[digitShift] >>> remK;
-  //     const last: i32 = this.n - digitShift - 1;
-  //     for (let i = 0; i < last; i++) {
-  //       const d = this.d[i + digitShift + 1];
-  //       res.d[i] = ((d << (BigInt.p - remK)) & BigInt.digitMask) | carry;
-  //       carry = d >>> remK;
-  //     }
-  //     res.d[last] = carry;
-  //   }
-  //   if (mustRoundDown) {
-  //     // Since the result is negative, rounding down means adding one to its
-  //     // absolute value. This cannot overflow.
-  //     res = res._addOne(true);
-  //   }
-  //   res.trimLeadingZeros();
-  //   return res;
-  // }
-
-  // private static toShiftAmount(k: i32): i32 {
-  //   const value: i32 = k >>> 0;
-  //   if (value > BigInt.maxBits) {
-  //     return -1;
-  //   }
-  //   return value;
-  // }
 
   // MULTIPLICATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 

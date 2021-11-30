@@ -4,9 +4,6 @@ describe("String Construction", () => {
   it("Constructs from radix 10 strings", () => {
     // constructor with small integer
     const smallStr = "100";
-    const bigIntSmallStrCon = BigInt.fromString(smallStr);
-    expect(bigIntSmallStrCon.toString()).toStrictEqual(smallStr);
-    // using fromString static method
     const bigIntSmallStrFrom = BigInt.fromString(smallStr);
     expect(bigIntSmallStrFrom.toString()).toStrictEqual(smallStr);
 
@@ -32,7 +29,7 @@ describe("String Construction", () => {
     expect(biHex.toString()).toStrictEqual(expected);
 
     const hexStr0x: string = "0x6AA50BC48CA";
-    const biHex0x: BigInt = BigInt.fromString(hexStr0x, 16);
+    const biHex0x: BigInt = BigInt.fromString(hexStr0x);
     const expected0x: string = U64.parseInt(
       hexStr0x.substring(2),
       16
@@ -91,6 +88,145 @@ describe("Construction from Uint16, Uint32, Uint64", () => {
     const biOne = BigInt.fromUInt64(one);
     expect(biOne.toString()).toStrictEqual("1");
     expect(biOne.isNegative).toStrictEqual(false);
+  });
+});
+
+describe("Construction from Int16, Int32, Int64", () => {
+  it("Constructs from i16", () => {
+    const maxValue: i16 = I16.MAX_VALUE;
+    const biMaxValue = BigInt.fromInt16(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(I16.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
+
+    const minValue: i16 = I16.MIN_VALUE;
+    const biMinValue = BigInt.fromInt16(minValue);
+    expect(biMinValue.toString()).toStrictEqual(I16.MIN_VALUE.toString());
+    expect(biMinValue.isNegative).toStrictEqual(true);
+
+    const zero: i16 = 0;
+    const zeroBI = BigInt.fromInt16(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: i16 = 1;
+    const biOne = BigInt.fromInt16(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
+
+    const negOne: i16 = -1;
+    const biNegOne = BigInt.fromInt16(negOne);
+    expect(biNegOne.toString()).toStrictEqual("-1");
+    expect(biNegOne.isNegative).toStrictEqual(true);
+  });
+
+  it("Constructs from i32", () => {
+    const maxValue: i32 = I32.MAX_VALUE;
+    const biMaxValue = BigInt.fromInt32(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(I32.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
+
+    const minValue: i32 = I32.MIN_VALUE;
+    const biMinValue = BigInt.fromInt32(minValue);
+    expect(biMinValue.toString()).toStrictEqual(I32.MIN_VALUE.toString());
+    expect(biMinValue.isNegative).toStrictEqual(true);
+
+    const zero: i32 = 0;
+    const zeroBI = BigInt.fromInt32(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: i32 = 1;
+    const biOne = BigInt.fromInt32(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
+
+    const negOne: i32 = -1;
+    const biNegOne = BigInt.fromInt32(negOne);
+    expect(biNegOne.toString()).toStrictEqual("-1");
+    expect(biNegOne.isNegative).toStrictEqual(true);
+  });
+
+  it("Constructs from i64", () => {
+    const maxValue: i64 = I64.MAX_VALUE;
+    const biMaxValue = BigInt.fromInt64(maxValue);
+    expect(biMaxValue.toString()).toStrictEqual(I64.MAX_VALUE.toString());
+    expect(biMaxValue.isNegative).toStrictEqual(false);
+
+    const minValue: i64 = I64.MIN_VALUE;
+    const biMinValue = BigInt.fromInt64(minValue);
+    expect(biMinValue.toString()).toStrictEqual(I64.MIN_VALUE.toString());
+    expect(biMinValue.isNegative).toStrictEqual(true);
+
+    const zero: i64 = 0;
+    const zeroBI = BigInt.fromInt64(zero);
+    expect(zeroBI.toString()).toStrictEqual("0");
+    expect(zeroBI.isNegative).toStrictEqual(false);
+
+    const one: i64 = 1;
+    const biOne = BigInt.fromInt64(one);
+    expect(biOne.toString()).toStrictEqual("1");
+    expect(biOne.isNegative).toStrictEqual(false);
+
+    const negOne: i64 = -1;
+    const biNegOne = BigInt.fromInt64(negOne);
+    expect(biNegOne.toString()).toStrictEqual("-1");
+    expect(biNegOne.isNegative).toStrictEqual(true);
+  });
+});
+
+describe("Construction from generic constructor", () => {
+  it("generic construction from string", () => {
+    const value: string = "100";
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value);
+  });
+
+  it("generic construction from i8", () => {
+    const value: i8 = -100;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from u8", () => {
+    const value: u8 = 100;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from i16", () => {
+    const value: i16 = I16.MIN_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from u16", () => {
+    const value: u16 = U16.MAX_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from i32", () => {
+    const value: i32 = I32.MIN_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from u32", () => {
+    const value: u32 = U32.MAX_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from i64", () => {
+    const value: i64 = I64.MIN_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
+  });
+
+  it("generic construction from u64", () => {
+    const value: u64 = U64.MAX_VALUE;
+    const bi = BigInt.of(value);
+    expect(bi.toString()).toStrictEqual(value.toString());
   });
 });
 
