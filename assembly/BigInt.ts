@@ -1238,8 +1238,7 @@ export class BigInt {
     return this._addOne(true);
   }
 
-  @operator("&")
-  bitwiseAnd(other: BigInt): BigInt {
+  bitwiseAnd<T>(other: T): BigInt {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let a: BigInt = this;
     let b: BigInt = BigInt.from(other);
@@ -1263,8 +1262,7 @@ export class BigInt {
     return a._andNot(b1);
   }
 
-  @operator("|")
-  bitwiseOr(other: BigInt): BigInt {
+  bitwiseOr<T>(other: T): BigInt {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let a: BigInt = this;
     let b: BigInt = BigInt.from(other);
@@ -1289,8 +1287,7 @@ export class BigInt {
     }
   }
 
-  @operator("^")
-  bitwiseXor(other: BigInt): BigInt {
+  bitwiseXor<T>(other: T): BigInt {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let a: BigInt = this;
     let b: BigInt = BigInt.from(other);
@@ -1456,63 +1453,130 @@ export class BigInt {
     return res;
   }
 
+  static eq<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.eq(b);
+  }
+
   @operator("==")
-  static eq(left: BigInt, right: BigInt): boolean {
+  private static eqOp(left: BigInt, right: BigInt): boolean {
     return left.eq(right);
   }
 
+  static ne<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.ne(b);
+  }
+
   @operator("!=")
-  static ne(left: BigInt, right: BigInt): boolean {
+  private static neOp(left: BigInt, right: BigInt): boolean {
     return left.ne(right);
   }
 
+  static lt<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.lt(b);
+  }
+
   @operator("<")
-  static lt(left: BigInt, right: BigInt): boolean {
+  private static ltOp(left: BigInt, right: BigInt): boolean {
     return left.lt(right);
   }
 
+  static lte<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.lte(b);
+  }
+
   @operator("<=")
-  static lte(left: BigInt, right: BigInt): boolean {
+  private static lteOp(left: BigInt, right: BigInt): boolean {
     return left.lte(right);
   }
 
+  static gt<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.gt(b);
+  }
+
   @operator(">")
-  static gt(left: BigInt, right: BigInt): boolean {
+  private static gtOp(left: BigInt, right: BigInt): boolean {
     return left.gt(right);
   }
 
+  static gte<T, U>(left: T, right: U): boolean {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.gte(b);
+  }
+
   @operator(">=")
-  static gte(left: BigInt, right: BigInt): boolean {
+  private static gteOp(left: BigInt, right: BigInt): boolean {
     return left.gte(right);
   }
 
+  static add<T, U>(left: T, right: U): BigInt {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.add(b);
+  }
+
   @operator("+")
-  static add(left: BigInt, right: BigInt): BigInt {
+  private static addOp(left: BigInt, right: BigInt): BigInt {
     return left.add(right);
   }
 
+  static sub<T, U>(left: T, right: U): BigInt {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.sub(b);
+  }
+
   @operator("-")
-  static sub(left: BigInt, right: BigInt): BigInt {
+  private static subOp(left: BigInt, right: BigInt): BigInt {
     return left.sub(right);
   }
 
+  static mul<T, U>(left: T, right: U): BigInt {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.mul(b);
+  }
+
   @operator("*")
-  static mul(left: BigInt, right: BigInt): BigInt {
+  private static mulOp(left: BigInt, right: BigInt): BigInt {
     return left.mul(right);
   }
 
+  static div<T, U>(left: T, right: U): BigInt {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.div(b);
+  }
+
   @operator("/")
-  static div(left: BigInt, right: BigInt): BigInt {
+  static divOp(left: BigInt, right: BigInt): BigInt {
     return left.div(right);
   }
 
+  static mod<T, U>(left: T, right: U): BigInt {
+    const a: BigInt = BigInt.from(left);
+    const b: BigInt = BigInt.from(right);
+    return a.mod(b);
+  }
+
   @operator("%")
-  static mod(left: BigInt, right: BigInt): BigInt {
+  private static modOp(left: BigInt, right: BigInt): BigInt {
     return left.mod(right);
   }
 
-  static pow(base: BigInt, k: i32): BigInt {
-    return base.pow(k);
+  static pow<T>(base: T, k: i32): BigInt {
+    const x: BigInt = BigInt.from(base);
+    return x.pow(k);
   }
 
   // note: the right-hand operand must be a positive integer that fits in an i32
@@ -1543,15 +1607,30 @@ export class BigInt {
     return left.bitwiseAnd(right);
   }
 
-  static bitwiseXor<T, U>(a: T, b: U): BigInt {
-    const left: BigInt = BigInt.from(a);
-    const right: BigInt = BigInt.from(b);
-    return left.bitwiseXor(right);
+  @operator("&")
+  private static bitwiseAndOp(a: BigInt, b: BigInt): BigInt {
+    return a.bitwiseAnd(b);
   }
 
   static bitwiseOr<T, U>(a: T, b: U): BigInt {
     const left: BigInt = BigInt.from(a);
     const right: BigInt = BigInt.from(b);
     return left.bitwiseOr(right);
+  }
+
+  @operator("|")
+  private static bitwiseOrOp(a: BigInt, b: BigInt): BigInt {
+    return a.bitwiseOr(b);
+  }
+
+  static bitwiseXor<T, U>(a: T, b: U): BigInt {
+    const left: BigInt = BigInt.from(a);
+    const right: BigInt = BigInt.from(b);
+    return left.bitwiseXor(right);
+  }
+
+  @operator("^")
+  private static bitwiseXorOp(a: BigInt, b: BigInt): BigInt {
+    return a.bitwiseXor(b);
   }
 }
