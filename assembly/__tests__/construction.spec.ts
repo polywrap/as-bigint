@@ -177,55 +177,55 @@ describe("Construction from Int16, Int32, Int64", () => {
 describe("Construction from generic constructor", () => {
   it("generic construction from string", () => {
     const value: string = "100";
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value);
   });
 
   it("generic construction from i8", () => {
     const value: i8 = -100;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from u8", () => {
     const value: u8 = 100;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from i16", () => {
     const value: i16 = I16.MIN_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from u16", () => {
     const value: u16 = U16.MAX_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from i32", () => {
     const value: i32 = I32.MIN_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from u32", () => {
     const value: u32 = U32.MAX_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from i64", () => {
     const value: i64 = I64.MIN_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 
   it("generic construction from u64", () => {
     const value: u64 = U64.MAX_VALUE;
-    const bi = BigInt.of(value);
+    const bi = BigInt.from(value);
     expect(bi.toString()).toStrictEqual(value.toString());
   });
 });

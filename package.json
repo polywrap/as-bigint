@@ -10,12 +10,10 @@
   "version": "0.4.0",
   "types": "assembly/index.ts",
   "releaseFiles": [
-    "assembly/",
     "build/",
     "README.md",
     "LICENSE",
-    "package.json",
-    "yarn.lock"
+    "package.json"
   ],
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
@@ -31,10 +29,8 @@
   },
   "devDependencies": {
     "@as-pect/cli": "6.2.4",
-    "@types/jest": "26.0.8",
     "@typescript-eslint/eslint-plugin": "4.11.1",
     "@typescript-eslint/parser": "4.11.1",
-    "typescript": "4.0.7",
     "assemblyscript": "0.19.20",
     "eslint": "7.16.0",
     "eslint-config-prettier": "7.1.0",
