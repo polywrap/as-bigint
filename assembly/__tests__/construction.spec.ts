@@ -233,7 +233,7 @@ describe("Construction from generic constructor", () => {
 describe("Constructor exceptions", () => {
   it("throws on letter input", () => {
     const letterConstruct = (): void => {
-      const _error = BigInt.fromString("jladsgkl");
+      BigInt.fromString("jladsgkl");
     };
     expect(letterConstruct).toThrow();
   });
@@ -266,7 +266,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(U32.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toInt32();
+      tooBig.toInt32();
     };
     expect(overflow).toThrow(
       `Integer overflow: cannot output i32 from an integer that uses ${33} bits`
@@ -276,7 +276,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(I32.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toInt32();
+      tooBig.toInt32();
     };
     expect(signedOverflow).toThrow("Signed integer overflow");
   });
@@ -294,7 +294,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(U32.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toUInt32();
+      tooBig.toUInt32();
     };
     expect(overflow).toThrow(
       `Integer overflow: cannot output u32 from an integer that uses ${33} bits`
@@ -305,7 +305,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(
         U32.MAX_VALUE.toString()
       ).opposite();
-      const _error = tooBig.toUInt32();
+      tooBig.toUInt32();
     };
     expect(negative).toThrow("Cannot cast negative integer to u32");
   });
@@ -323,7 +323,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(I64.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toInt64();
+      tooBig.toInt64();
     };
     expect(overflow).toThrow(
       `Integer overflow: cannot output i64 from an integer that uses ${65} bits`
@@ -333,7 +333,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(I64.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toInt64();
+      tooBig.toInt64();
     };
     expect(signedOverflow).toThrow("Signed integer overflow");
   });
@@ -351,7 +351,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(U64.MAX_VALUE.toString()).addInt(
         1
       );
-      const _error = tooBig.toUInt64();
+      tooBig.toUInt64();
     };
     expect(overflow).toThrow(
       `Integer overflow: cannot output u64 from an integer that uses ${65} bits`
@@ -362,7 +362,7 @@ describe("output to int and uint", () => {
       const tooBig: BigInt = BigInt.fromString(
         U64.MAX_VALUE.toString()
       ).opposite();
-      const _error = tooBig.toUInt64();
+      tooBig.toUInt64();
     };
     expect(negative).toThrow("Cannot cast negative integer to u64");
   });
