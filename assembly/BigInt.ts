@@ -763,11 +763,11 @@ export class BigInt {
 
   // unsigned multiplication that returns at most maxDigits
   private _mulPartial(other: BigInt, maxDigits: i32): BigInt {
-    const min: i32 = this.n <= other.n ? this.n : other.n;
+    // const min: i32 = this.n <= other.n ? this.n : other.n;
     // optimization -> use Comba multiplication if possible
-    if (maxDigits < BigInt.maxComba && min < BigInt.maxComba) {
-      return this._mulComba(other, maxDigits);
-    }
+    // if (maxDigits < BigInt.maxComba && min < BigInt.maxComba) {
+    //   return this._mulComba(other, maxDigits);
+    // }
     const res = BigInt.getEmptyResultContainer(maxDigits, false, maxDigits);
     // multiply using standard O(N^2) method taught in schools
     for (let i = 0; i < this.n; i++) {
@@ -826,80 +826,151 @@ export class BigInt {
     return res;
   }
 
-  // Babylonian method (as used in Uniswap contracts)
-  // https://github.com/Uniswap/uniswap-lib/blob/master/contracts/libraries/Babylonian.sol
-  // eslint-disable-next-line @typescript-eslint/member-ordering
+  square(): BigInt {
+    const digitsNeeded: i32 = this.n + this.n + 1;
+    if (digitsNeeded < BigInt.maxComba) {
+      return this._squareComba();
+    } else {
+      return this._baseSquare();
+    }
+  }
+
+  private _baseSquare(): BigInt {
+    const size: i32 = this.n + this.n + 1;
+    const res = BigInt.getEmptyResultContainer(size, false, size);
+    for (let i = 0; i < size; i++) {
+      let j: i32;
+      // first calculate the digit at 2*i and the double precision result
+      let r: u64 = (<u64>this.d[i] * this.d[i]) + res.d[i + i];
+      // store lower part in result
+      res.d[i+i] = <u32>(r & BigInt.digitMask);
+      // get the carry
+      let u: u32 = <u32>(r >> BigInt.p);
+      for (j = i + 1; j < size; j++) {
+        // first calculate the product
+        r = <u64>this.d[i] * this.d[j];
+        // now calculate the double precision result
+        r = <u64>res.d[i + j] + r + r + u;
+        // store lower part
+        res.d[i + j] = <u32>(r & BigInt.digitMask);
+        // get carry
+        u = <u32>(r >> BigInt.p);
+      }
+      // propagate upwards
+      while (u != 0) {
+        r = <u64>res.d[i + j] + u;
+        res.d[i + j] = <u32>(r & BigInt.digitMask);
+        u = <u32>(r >> BigInt.p);
+        ++j;
+      }
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
+  private _squareComba(): BigInt {
+    const size: i32 = this.n + this.n;
+    const res = BigInt.getEmptyResultContainer(size, false, size);
+
+    let u: u64 = 0;
+    for (let i = 0; i < size; i++) {
+      /* clear accumulator */
+      let accum: u64 = 0;
+      /* get offsets into the two BigInts */
+      const nSub1: i32 = this.n - 1;
+      let y: i32 = nSub1 < i ? nSub1 : i; // min
+      let x: i32 = i - y;
+      /* this is the number of times the loop will iterate, essentially
+         while (x++ < this.n && y-- >= 0) { ... }
+       */
+      let nSubX: i32 = this.n - x;
+      let yAdd1: i32 = y + 1;
+      let j: i32 = nSubX < yAdd1 ? nSubX : yAdd1; // min
+      /* now for squaring x can never equal y
+       * we halve the distance since they approach at a rate of 2*
+       * and we have to round because odd cases need to be executed
+       */
+      let shiftedDiff: i32 = (y - x + 1) >> 1;
+      j = j < shiftedDiff ? j : shiftedDiff;
+      /* execute loop */
+      for (let k = 0; k < j; k++) {
+        accum += <u64>this.d[x + k] * this.d[y - k];
+      }
+      /* double the inner product and add carry */
+      accum = accum + accum + u;
+      /* even columns have the square term in them */
+      if ((<u32>i & 1) == 0) {
+        accum += <u64>this.d[i >> 1] * this.d[i >> 1];
+      }
+      /* store it */
+      res.d[i] = <u32>accum & BigInt.digitMask;
+      /* make next carry */
+      u = accum >> BigInt.p;
+    }
+    res.trimLeadingZeros();
+    return res;
+  }
+
   sqrt(): BigInt {
     if (this.isNeg)
       throw new RangeError("Square root of negative numbers is not supported");
     if (this.n == 0) return this.copy();
-    let res: BigInt = BigInt.getEmptyResultContainer(this.d.length, false, 1);
-    res.d[0] = 1;
-    res = res.mulPowTwo(this.countBits() / 2);
-    for (let i = 0; i < 10; i++) {
-      res = this.div(res).add(res).div2();
-    }
-    const res1 = this.div(res);
-    return res.lt(res1) ? res : res1;
-  }
 
-  // alternative sqrt method used in uniswap v3 sdk -> is this faster?
-  // https://github.com/Uniswap/sdk-core/blob/main/src/utils/sqrt.ts
-  // sqrt(value: BigInt): BigInt {
-  //   if (value < BigInt.ZERO) {
-  //     throw new Error("cannot calculate square root of negative number");
-  //   }
-  //
-  //   // rely on built in sqrt if possible
-  //   if (value <= BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER)) {
-  //     const fVal: f64 = <f64>value.toUInt64();
-  //     const fSqrt: f64 = Math.floor(Math.sqrt(fVal));
-  //     return BigInt.fromUInt64(<u64>fSqrt);
-  //   }
-  //
-  //   let z: BigInt;
-  //   let x: BigInt;
-  //   z = value;
-  //   x = value.div2().add(BigInt.ONE);
-  //   while (x < z) {
-  //     z = x;
-  //     x = value.div(x).add(x).div2();
-  //   }
-  //   return z;
-  // }
+    // rely on built in sqrt if possible
+    if (this.lte(BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER))) {
+      const fVal: f64 = <f64>this.toUInt64();
+      const fSqrt: f64 = Math.floor(Math.sqrt(fVal));
+      return BigInt.fromUInt64(<u64>fSqrt);
+    }
+
+    // Newton Raphson iteration
+    let z: BigInt = this;
+    let x: BigInt = BigInt.ONE.mulPowTwo(this.countBits() / 2);
+    x = this.div(x).add(x).div2();
+    while (x < z) {
+      z = x;
+      x = this.div(x).add(x).div2();
+    }
+
+    return z;
+  }
 
   // DIVISION //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // handles sign and allows for easy replacement of algorithm in future update
   div<T>(other: T): BigInt {
-    return this._slowDiv(BigInt.from(other));
+    return this._div(BigInt.from(other));
   }
 
   // handles sign and allows for easy replacement of algorithm in future update
   mod<T>(other: T): BigInt {
-    return this._slowDivRemainder(BigInt.from(other));
+    return this._divRemainder(BigInt.from(other));
   }
 
   // returns [quotient, remainder]
   divMod<T>(other: T): BigInt[] {
-    return this._slowDivMod(BigInt.from(other));
+    return this._divMod(BigInt.from(other));
   }
 
-  // TODO: fast division has bugs -> using "slow" division
-  // private _div(other: BigInt): BigInt {
+  // TODO: fast division has bug(s) -> using "slow" division
+  // private _fastDiv(other: BigInt): BigInt[] {
   //   if (other.eq(BigInt.fromUInt16(0))) {
   //     throw new Error("Divide by zero");
   //   }
   //   const cmp: i32 = this.magCompareTo(other);
   //   if (cmp < 0) {
-  //     return BigInt.fromUInt16(0);
+  //     return [BigInt.fromUInt16(0), this.copy()];
   //   } else if (cmp == 0) {
   //     const q = BigInt.fromUInt16(1);
   //     q.isNeg = this.isNeg != other.isNeg;
-  //     return q;
+  //     return [q, BigInt.fromUInt16(0)];
   //   }
   //   // set up numbers
-  //   let q: BigInt = BigInt.getEmptyResultContainer(this.n + 2, this.isNeg != other.isNeg, this.n);
+  //   let q: BigInt = BigInt.getEmptyResultContainer(
+  //     this.n + 2,
+  //     this.isNeg != other.isNeg,
+  //     this.n + 2
+  //   );
   //   let x: BigInt = this.abs();
   //   let y: BigInt = other.abs();
   //   // norm leading digits of x and y
@@ -911,12 +982,13 @@ export class BigInt {
   //   } else {
   //     norm = 0;
   //   }
+  //
   //   // find leading digit of quotient
   //   const n: i32 = this.n - 1;
   //   const t: i32 = other.n - 1;
   //   const nSubt = n - t;
   //   y.mulBasisPow(nSubt);
-  //   while (x.magCompareTo(y) >= 0) {
+  //   while (x.compareTo(y) >= 0) {
   //     q.d[nSubt]++;
   //     x = x.sub(y);
   //   }
@@ -927,50 +999,50 @@ export class BigInt {
   //   for (let i = n; i > t; i--) {
   //     if (i > x.n) continue;
   //     if (x.d[i] == y.d[t]) {
-  //       q.d[i-t-1] = BigInt.b - 1;
+  //       q.d[i - t - 1] = (<u32>1 << BigInt.p) - 1;
   //     } else {
-  //      let r: u64 = <u64>x.d[i] << <u64>BigInt.p;
-  //      r |= <u64>x.d[i-1];
-  //      r /= <u64>y.d[t];
-  //      if (r > <u64>BigInt.digitMask) {
-  //        r = <u64>BigInt.digitMask;
-  //      }
-  //      q.d[i-t-1] = <u32>(r & <u64>BigInt.digitMask);
+  //       let r: u64 = (<u64>x.d[i]) << (<u64>BigInt.p);
+  //       r |= <u64>x.d[i - 1];
+  //       r /= <u64>y.d[t];
+  //       if (r > <u64>BigInt.digitMask) {
+  //         r = <u64>BigInt.digitMask;
+  //       }
+  //       q.d[i - t - 1] = <u32>(r & (<u64>BigInt.digitMask));
   //     }
   //     // fix up quotient estimation
-  //     q.d[i-t-1] = ++q.d[i-t-1] & BigInt.digitMask;
+  //     q.d[i - t - 1] = ++q.d[i - t - 1] & BigInt.digitMask;
   //     do {
-  //       q.d[i-t-1] = --q.d[i-t-1] & BigInt.digitMask;
+  //       q.d[i - t - 1] = --q.d[i - t - 1] & BigInt.digitMask;
   //       // find left
   //       temp1 = BigInt.getEmptyResultContainer(2, false, 2);
-  //       temp1.d[0] = t - 1 < 0 ? 0 : y.d[t-1];
+  //       temp1.d[0] = t - 1 < 0 ? 0 : y.d[t - 1];
   //       temp1.d[1] = y.d[t];
-  //       temp1 = temp1.mul(BigInt.fromUInt32(q.d[i-t-1]));
+  //       temp1 = temp1.mulInt(q.d[i - t - 1]);
   //       // find right
   //       temp2 = BigInt.getEmptyResultContainer(3, false, 3);
-  //       temp2.d[0] = i - 2 < 0 ? 0 : x.d[i-2];
-  //       temp2.d[1] = i - 1 < 0 ? 0 : x.d[i-1];
+  //       temp2.d[0] = i - 2 < 0 ? 0 : x.d[i - 2];
+  //       temp2.d[1] = i - 1 < 0 ? 0 : x.d[i - 1];
   //       temp2.d[2] = x.d[i];
   //     } while (temp1.magCompareTo(temp2) > 0);
-  //     //
-  //     temp1 = y.mul(BigInt.fromUInt32(q.d[i-t-1]));
-  //     temp1.mulBasisPow(i-t-1);
+  //
+  //     temp1 = y.mulInt(q.d[i - t - 1]);
+  //     temp1.mulBasisPow(i - t - 1);
   //     x = x.sub(temp1);
   //     if (x.isNeg) {
   //       temp1 = y.copy();
-  //       temp1.mulBasisPow(i-t-1);
+  //       temp1.mulBasisPow(i - t - 1);
   //       x = x.add(temp1);
-  //       q.d[i-t-1] = --q.d[i-t-1] & BigInt.digitMask;
+  //       q.d[i - t - 1] = --q.d[i - t - 1] & BigInt.digitMask;
   //     }
   //   }
   //   // finalize
   //   q.trimLeadingZeros();
   //   x.isNeg = x.n != 0 && this.isNeg;
-  //   let r: BigInt = x.divPowTwo(norm);
-  //   return q;
+  //   const r: BigInt = x.divPowTwo(norm);
+  //   return [q, r];
   // }
 
-  private _slowDiv(other: BigInt): BigInt {
+  private _div(other: BigInt): BigInt {
     if (other.eq(BigInt.fromUInt16(0))) {
       throw new Error("Divide by zero");
     }
@@ -989,7 +1061,7 @@ export class BigInt {
     return q;
   }
 
-  private _slowDivRemainder(other: BigInt): BigInt {
+  private _divRemainder(other: BigInt): BigInt {
     if (other.eq(BigInt.fromUInt16(0))) {
       throw new Error("Divide zero error");
     }
@@ -1007,7 +1079,7 @@ export class BigInt {
   }
 
   // returns [quotient, remainder]
-  private _slowDivMod(other: BigInt): BigInt[] {
+  private _divMod(other: BigInt): BigInt[] {
     if (other.eq(BigInt.fromUInt16(0))) {
       throw new Error("Divide by zero");
     }

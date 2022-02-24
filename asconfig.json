@@ -9,8 +9,6 @@
     "release": {
       "binaryFile": "build/BigInt.wasm",
       "optimize": true,
-      "optimizeLevel": 3,
-      "shrinkLevel": 2,
       "converge": true,
       "noAssert": true
     }
