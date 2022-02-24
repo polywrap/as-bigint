@@ -815,13 +815,19 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  pow(exponent: i32): BigInt {
-    if (exponent < 0) {
+  pow(k: i32): BigInt {
+    if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
-    let res: BigInt = this.copy();
-    for (let i = 1; i < exponent; i++) {
-      res = res.mul(this.copy());
+    let temp: BigInt = this.copy();
+    let res: BigInt = BigInt.ONE;
+    while (k > 0) {
+      /* if the bit is set multiply */
+      if ((k & 1) != 0) res = res.mul(temp);
+      /* square */
+      if (k > 1) temp = temp.square();
+      /* shift to next bit */
+      k >>= 1;
     }
     return res;
   }
@@ -925,7 +931,7 @@ export class BigInt {
 
     // Newton Raphson iteration
     let z: BigInt = this;
-    let x: BigInt = BigInt.ONE.mulPowTwo(this.countBits() / 2);
+    let x: BigInt = BigInt.fromUInt16(1).mulPowTwo(this.countBits() / 2);
     x = this.div(x).add(x).div2();
     while (x < z) {
       z = x;
