@@ -847,9 +847,9 @@ export class BigInt {
     for (let i = 0; i < size; i++) {
       let j: i32;
       // first calculate the digit at 2*i and the double precision result
-      let r: u64 = (<u64>this.d[i] * this.d[i]) + res.d[i + i];
+      let r: u64 = <u64>this.d[i] * this.d[i] + res.d[i + i];
       // store lower part in result
-      res.d[i+i] = <u32>(r & BigInt.digitMask);
+      res.d[i + i] = <u32>(r & BigInt.digitMask);
       // get the carry
       let u: u32 = <u32>(r >> BigInt.p);
       for (j = i + 1; j < size; j++) {
@@ -884,19 +884,19 @@ export class BigInt {
       let accum: u64 = 0;
       /* get offsets into the two BigInts */
       const nSub1: i32 = this.n - 1;
-      let y: i32 = nSub1 < i ? nSub1 : i; // min
-      let x: i32 = i - y;
+      const y: i32 = nSub1 < i ? nSub1 : i; // min
+      const x: i32 = i - y;
       /* this is the number of times the loop will iterate, essentially
          while (x++ < this.n && y-- >= 0) { ... }
        */
-      let nSubX: i32 = this.n - x;
-      let yAdd1: i32 = y + 1;
+      const nSubX: i32 = this.n - x;
+      const yAdd1: i32 = y + 1;
       let j: i32 = nSubX < yAdd1 ? nSubX : yAdd1; // min
       /* now for squaring x can never equal y
        * we halve the distance since they approach at a rate of 2*
        * and we have to round because odd cases need to be executed
        */
-      let shiftedDiff: i32 = (y - x + 1) >> 1;
+      const shiftedDiff: i32 = (y - x + 1) >> 1;
       j = j < shiftedDiff ? j : shiftedDiff;
       /* execute loop */
       for (let k = 0; k < j; k++) {
@@ -905,11 +905,11 @@ export class BigInt {
       /* double the inner product and add carry */
       accum = accum + accum + u;
       /* even columns have the square term in them */
-      if ((<u32>i & 1) == 0) {
+      if (((<u32>i) & 1) == 0) {
         accum += <u64>this.d[i >> 1] * this.d[i >> 1];
       }
       /* store it */
-      res.d[i] = <u32>accum & BigInt.digitMask;
+      res.d[i] = (<u32>accum) & BigInt.digitMask;
       /* make next carry */
       u = accum >> BigInt.p;
     }
@@ -930,7 +930,7 @@ export class BigInt {
     }
 
     // Newton Raphson iteration
-    let z: BigInt = this;
+    let z: BigInt = this; // eslint-disable-line  @typescript-eslint/no-this-alias
     let x: BigInt = BigInt.fromUInt16(1).mulPowTwo(this.countBits() / 2);
     x = this.div(x).add(x).div2();
     while (x < z) {
