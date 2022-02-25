@@ -7,13 +7,15 @@
     "type": "git",
     "url": "https://github.com/polywrap/as-bigint.git"
   },
-  "version": "0.5.0",
+  "version": "0.5.1",
   "types": "assembly/index.ts",
   "releaseFiles": [
+    "assembly/",
     "build/",
     "README.md",
     "LICENSE",
-    "package.json"
+    "package.json",
+    "yarn.lock"
   ],
   "scripts": {
     "reset": "yarn clean && yarn && yarn build",
