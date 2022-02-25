@@ -55,11 +55,10 @@ describe("Algebraic operations", () => {
   });
 
   it("squares then square roots", () => {
-    // square then square root
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const x = BigInt.fromString(testCase.x);
-      const actualSquare = x.pow(<i32>2);
+      const actualSquare = x.square();
       const expectedSquare = testCase.xSquare;
       expect(actualSquare.toString()).toStrictEqual(expectedSquare);
       const actualRoot = actualSquare.sqrt();
@@ -73,7 +72,6 @@ describe("Algebraic operations", () => {
   });
 
   it("y^4 then square root x2", () => {
-    // square then square root
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const y = BigInt.fromString(testCase.y);

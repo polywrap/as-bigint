@@ -60,4 +60,5 @@ module.exports = {
    * To create your own custom reporter, please check out the Core API.
    */
   // reporter: new CustomReporter(),
+  // coverage: ['assembly/BigInt.ts'],
 };

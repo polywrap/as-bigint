@@ -4,7 +4,6 @@ BigInt is an AssemblyScript class for math with arbitrarily large integers.
 ## Features
 
 - Fast arithmetic operations
-- Optimized for numbers with equivalent bit-length of up to 1,0000 bits
 - Lightweight
 - Immutable instances
 - Core operations thoroughly tested
@@ -36,15 +35,16 @@ const difference: BigInt = a.sub(b);
 const product: BigInt = a.mul(b);
 const quotient: BigInt = a.div(b);
 const remainder: BigInt = a.mod(b);
+const exponential: BigInt = a.pow(3);
+const squared: BigInt = a.square();
 const squareRoot: BigInt = a.sqrt();
-const cubed: BigInt = a.pow(3);
 const roundedQuotient: BigInt = a.roundedDiv(b);
 
 // faster operations when right-side variable is a 32 bit unsigned integer:
 const c: u32 = 1234;
 const intSum: BigInt = a.addInt(c);
 const intDifference: BigInt = a.subInt(c);
-const intProduct: BigInt = a.mulInt(c); // mulInt only supports 28 bit intger arguments (max value: 268435456)
+const intProduct: BigInt = a.mulInt(c);
 const intQuotient: BigInt = a.divInt(c);
 const intRemainder: BigInt = a.modInt(c);
 const intRoundedQuotient: BigInt = a.roundedDivInt(c);
@@ -101,7 +101,7 @@ const myUInt64: u64 = BigInt.toUInt64();
 ```
 
 ## Development Status & Roadmap
-![CI](https://github.com/Web3-API/as-bigint/actions/workflows/ci.yaml/badge.svg?branch=main)
+![CI](https://github.com/polywrap/as-bigint/actions/workflows/ci.yaml/badge.svg?branch=main)
 
 ### Current Status
 Operation | Tests | Optimization
@@ -109,10 +109,10 @@ Operation | Tests | Optimization
 Addition | Implemented | Complete
 Subtraction | Implemented | Complete
 Multiplication | Implemented | Up to ~1,500 bit numbers
-Exponentiation | Implemented | Incomplete
+Exponentiation | Implemented | Complete
 Division | Implemented | Incomplete
 Remainder | Implemented | Incomplete
-Square root | Implemented | Incomplete
+Square root | Implemented | Complete
 Modular reduction | N/A | Not implemented
 Random number generation | N/A | Not implemented
 Cryptographic functions | N/A | Not implemented
@@ -123,14 +123,11 @@ Note that operator overloads `<<`, `>>`, and `**` only support right-hand operan
 *Priority based on blockchain-related use case; 1 is highest priority, 5 is lowest*
 Task | Description | Priority
 --- | --- | ---
-Division optimization | A faster division algorithm is already written but does not compile; needs debugging | 1
-New square root method | Current square root method only works for integers up to about 1,000 bits | 2
-More multiplication optimization | Implement Karatsuba and Tom-Cook three-way multiplication for faster multiplication of numbers larger than 1,500 bits | 3
+Division optimization | A faster division algorithm is needed | 1
 Modular reduction methods | Currently using division remainder for modulus; Implement Barret reduction, Montgomery reduction, Diminished Radix algorithms | 3
-Exponentiation optimization | Current exponentiation uses naive method of looped multiplication; Implement k-ary exponentiation, modular exponentiation algorithms | 3
-Squaring optimization | Currently using naive method of looped multiplication; Implement optimized multiplication for squaring | 3
 Random number generation | Implement function to generate random integers of arbitrary size | 4
 Cryptographic algorithms | Implement functions used for cryptography (e.g., Greatest common divisor, primality tests, sha3) | 5
+More multiplication optimization | Implement Karatsuba and Tom-Cook three-way multiplication for faster multiplication of numbers larger than 1,500 bits | 5
 
 ## Contributing  
 
@@ -148,11 +145,11 @@ To autofix lint errors:
 
 ## Handling decimal numbers
 
-If you need to work with arbitrarily large decimal numbers, check out as-bigfloat: https://github.com/Web3-API/as-bigfloat. The BigFloat class is built on top of BigInt, is not otherwise performance-optimized, and is still in development. Only the fromString, fromFraction, toString, toFixed, toSignificant, and div (division) functions have been thoroughly tested.
+If you need to work with arbitrarily large decimal numbers, check out as-bignumber: https://github.com/polywrap/as-bignumber. The BigNumber class is built on top of BigInt for high-performance decimal arithmetic.
 
 ## Acknowledgements
 
-Web3API developed BigInt to use in the development tools we produce for fast, language-agnostic decentralized API development. Web3api allows developers to interact with any web3 protocol from any language, making between-protocol composition easy. Learn more at https://web3api.dev/.
+Polywrap developed BigInt to use in the development tools we produce for fast, language-agnostic decentralized API development. Polywrap allows developers to interact with any web3 protocol from any language, making between-protocol composition easy. Learn more at https://polywrap.io.
 
 The BigInt method implementations are largely based on *BigNum Math: Implementing Cryptographic Multiple Precision Arithmetic 1st Edition*
 by Tom St Denis.
