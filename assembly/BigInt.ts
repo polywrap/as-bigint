@@ -1533,8 +1533,7 @@ export class BigInt {
 
   static eq<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.eq(b);
+    return a.eq(right);
   }
 
   @operator("==")
@@ -1544,8 +1543,7 @@ export class BigInt {
 
   static ne<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.ne(b);
+    return a.ne(right);
   }
 
   @operator("!=")
@@ -1555,8 +1553,7 @@ export class BigInt {
 
   static lt<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.lt(b);
+    return a.lt(right);
   }
 
   @operator("<")
@@ -1566,8 +1563,7 @@ export class BigInt {
 
   static lte<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.lte(b);
+    return a.lte(right);
   }
 
   @operator("<=")
@@ -1577,8 +1573,7 @@ export class BigInt {
 
   static gt<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.gt(b);
+    return a.gt(right);
   }
 
   @operator(">")
@@ -1588,8 +1583,7 @@ export class BigInt {
 
   static gte<T, U>(left: T, right: U): boolean {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.gte(b);
+    return a.gte(right);
   }
 
   @operator(">=")
@@ -1599,8 +1593,7 @@ export class BigInt {
 
   static add<T, U>(left: T, right: U): BigInt {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.add(b);
+    return a.add(right);
   }
 
   @operator("+")
@@ -1610,8 +1603,7 @@ export class BigInt {
 
   static sub<T, U>(left: T, right: U): BigInt {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.sub(b);
+    return a.sub(right);
   }
 
   @operator("-")
@@ -1621,8 +1613,7 @@ export class BigInt {
 
   static mul<T, U>(left: T, right: U): BigInt {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.mul(b);
+    return a.mul(right);
   }
 
   @operator("*")
@@ -1632,8 +1623,7 @@ export class BigInt {
 
   static div<T, U>(left: T, right: U): BigInt {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.div(b);
+    return a.div(right);
   }
 
   @operator("/")
@@ -1643,8 +1633,7 @@ export class BigInt {
 
   static mod<T, U>(left: T, right: U): BigInt {
     const a: BigInt = BigInt.from(left);
-    const b: BigInt = BigInt.from(right);
-    return a.mod(b);
+    return a.mod(right);
   }
 
   @operator("%")
@@ -1681,8 +1670,7 @@ export class BigInt {
 
   static bitwiseAnd<T, U>(a: T, b: U): BigInt {
     const left: BigInt = BigInt.from(a);
-    const right: BigInt = BigInt.from(b);
-    return left.bitwiseAnd(right);
+    return left.bitwiseAnd(b);
   }
 
   @operator("&")
@@ -1692,8 +1680,7 @@ export class BigInt {
 
   static bitwiseOr<T, U>(a: T, b: U): BigInt {
     const left: BigInt = BigInt.from(a);
-    const right: BigInt = BigInt.from(b);
-    return left.bitwiseOr(right);
+    return left.bitwiseOr(b);
   }
 
   @operator("|")
@@ -1703,8 +1690,7 @@ export class BigInt {
 
   static bitwiseXor<T, U>(a: T, b: U): BigInt {
     const left: BigInt = BigInt.from(a);
-    const right: BigInt = BigInt.from(b);
-    return left.bitwiseXor(right);
+    return left.bitwiseXor(b);
   }
 
   @operator("^")
