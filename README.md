@@ -152,6 +152,10 @@ To autofix lint errors:
 
 If you need to work with arbitrarily large decimal numbers, check out as-bignumber: https://github.com/polywrap/as-bignumber. The BigNumber class is built on top of BigInt for high-performance decimal arithmetic.
 
+## Handling fractions
+
+If you need to work with numbers represented as fractions, check out as-fraction: https://github.com/polywrap/as-fraction. The Fraction class is built on top of BigInt for high-performance fraction arithmetic.
+
 ## Acknowledgements
 
 Polywrap developed BigInt to use in the development tools we produce for fast, language-agnostic decentralized API development. Polywrap allows developers to interact with any web3 protocol from any language, making between-protocol composition easy. Learn more at https://polywrap.io.
