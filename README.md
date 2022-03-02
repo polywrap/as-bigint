@@ -20,12 +20,12 @@ or
 ```typescript
 import { BigInt } from "as-bigint"
 
+// generic constructor supports string and all native integer types
+const generic: BigInt = BigInt.from(42);
 // read BigInt from string
 const a: BigInt = BigInt.fromString("19374529734987892634530927528739060327972904713094389147895891798347509179347517");
-
 // fromString and toString methods optionally take a radix argument
 const b: BigInt = BigInt.fromString("9F59E5Ed123C10D57E92629612511b14628D2799", 16);
-
 // for hex strings, a radix argument is not required if value is prefixed by 0x (or -0x for negative numbers)
 const fromHex: BigInt = BigInt.fromString("0x9F59E5Ed123C10D57E92629612511b14628D2799");
 
@@ -73,9 +73,10 @@ const isLessThanOrEqualTo: boolean = a.lte(b);
 const isGreaterThan: boolean = a.gt(b);
 const isGreaterThanOrEqualTo: boolean = a.gte(b);
 
-// binary arithmetic and comparison operations also have static implementations
+// binary arithmetic, comparison, and bitwise operators also have static implementations
 const staticProduct: BigInt = BigInt.mul(a, b);
 const staticIsEqual: boolean = BigInt.eq(a, b);
+const staticAnd: boolean = BigInt.bitwiseAnd(a, b);
 
 // instantiate new copy, absolute value, or opposite
 const sameNumber: BigInt = a.copy();
@@ -87,11 +88,15 @@ const sizeOfNumber: i32 = a.countBits();
 const isZeroNumber: boolean = a.isZero();
 const zero: BigInt = BigInt.ZERO;
 const one: BigInt = BigInt.ONE;
+const negOne: BigInt = BigInt.NEG_ONE;
 
 // even faster constructors for small numbers (max values shown here)
 const verySmall: BigInt = BigInt.fromUInt16(65535);
+const verySmallSigned: BigInt = BigInt.fromInt16(-65535);
 const prettySmall: BigInt = BigInt.fromUInt32(4294967295);
+const prettySmallSigned: BigInt = BigInt.fromInt32(-4294967295);
 const stillSmall: BigInt = BigInt.fromUInt64(18446744073709551615);
+const stillSmallSigned: BigInt = BigInt.fromInt64(-18446744073709551615);
 
 // output to integers
 const myInt32: i32 = BigInt.toInt32();
