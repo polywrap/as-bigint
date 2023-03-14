@@ -834,26 +834,9 @@ export class BigInt {
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
-  pow_u32(k: u32): BigInt {
-    if (k < 0) {
-      return this / this.pow(-k);
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
   pow_i8(k: i8): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_i8(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -870,7 +853,7 @@ export class BigInt {
 
   pow_u8(k: u8): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_u8(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -887,7 +870,7 @@ export class BigInt {
 
   pow_i16(k: i16): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_i16(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -904,7 +887,24 @@ export class BigInt {
 
   pow_u16(k: u16): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_u16(-k);
+    }
+    let temp: BigInt = this.copy();
+    let res: BigInt = BigInt.ONE;
+    while (k > 0) {
+      /* if the bit is set multiply */
+      if ((k & 1) != 0) res = res.mul(temp);
+      /* square */
+      if (k > 1) temp = temp.square();
+      /* shift to next bit */
+      k >>= 1;
+    }
+    return res;
+  }
+
+  pow_u32(k: u32): BigInt {
+    if (k < 0) {
+      return this / this.pow_u32(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -921,7 +921,7 @@ export class BigInt {
 
   pow_i32(k: i32): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_i32(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -938,7 +938,7 @@ export class BigInt {
 
   pow_u64(k: u64): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_u64(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -955,7 +955,7 @@ export class BigInt {
 
   pow_i64(k: i64): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      return this / this.pow_i64(-k);
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
