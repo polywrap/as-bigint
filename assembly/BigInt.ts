@@ -836,7 +836,7 @@ export class BigInt {
 
   pow_u32(k: u32): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -853,7 +853,7 @@ export class BigInt {
 
   pow_i8(k: i8): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -870,7 +870,7 @@ export class BigInt {
 
   pow_u8(k: u8): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -887,7 +887,7 @@ export class BigInt {
 
   pow_i16(k: i16): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -904,7 +904,7 @@ export class BigInt {
 
   pow_u16(k: u16): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -921,7 +921,7 @@ export class BigInt {
 
   pow_i32(k: i32): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -938,7 +938,7 @@ export class BigInt {
 
   pow_u64(k: u64): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -955,7 +955,7 @@ export class BigInt {
 
   pow_i64(k: i64): BigInt {
     if (k < 0) {
-      return this / this.pow(-k);
+      throw new RangeError("BigInt does not support negative exponentiation");
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
