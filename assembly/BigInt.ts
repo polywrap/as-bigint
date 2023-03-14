@@ -816,6 +816,8 @@ export class BigInt {
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     pow<T>(val: T): BigInt {
+    if (val instanceof BigInt) return this.pow_bigint(val);
+    // @ts-ignore
     if (val instanceof i8) return this.pow_i8(val);
     // @ts-ignore
     if (val instanceof u8) return this.pow_u8(val);
@@ -832,6 +834,26 @@ export class BigInt {
     // @ts-ignore
     if (val instanceof u64) return this.pow_u64(val);
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
+  }
+
+  pow_bigint(k: BigInt): BigInt {
+    if (k.isNeg) {
+      throw new RangeError("BigInt does not support negative exponentiation");
+    }
+    if (k.lte(u64.MAX_VALUE)) {
+      return this.pow_u64(k.toUInt64());
+    }
+    let temp: BigInt = this.copy();
+    let res: BigInt = BigInt.ONE;
+    while (k.lt(BigInt.ZERO)) {
+      /* if the bit is set multiply */
+      if (k.bitwiseAnd(1).ne(0)) res = res.mul(temp);
+      /* square */
+      if (k.gt(BigInt.ONE)) temp = temp.square();
+      /* shift to next bit */
+      k = k.rightShift(1);
+    }
+    return res;
   }
 
   pow_u32(k: u32): BigInt {
