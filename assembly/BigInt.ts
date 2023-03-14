@@ -853,7 +853,7 @@ export class BigInt {
       /* shift to next bit */
       k = k.rightShift(1);
     }
-    return res;
+    return res
   }
 
   pow_u32(k: u32): BigInt {
@@ -1099,6 +1099,29 @@ export class BigInt {
     }
 
     return z;
+  }
+
+  log2(): BigInt {
+    if (this.lte(BigInt.ZERO)) {
+      throw new RangeError("Logarithm of negative numbers is not supported.");
+    }
+    this.trimLeadingZeros();
+    return BigInt.from(this.d.length * BigInt.actualBits - clz(this.d[0]));
+  }
+
+  log<T>(base: T): BigInt {
+    if (base instanceof BigInt) return this._log_bigint(base);
+    // @ts-ignore
+    if (isInteger(base) || isFloat(base)) return this._log_number(base);
+    throw new TypeError("Unsupported generic type " + nameof<T>(base));
+  }
+
+  private _log_number<T>(base: T): BigInt {
+    return this.log2().div(floor(Math.log2(base)));
+  }
+
+  private _log_bigint(base: BigInt): BigInt {
+    return this.log2().div(base.log2());
   }
 
   // DIVISION //////////////////////////////////////////////////////////////////////////////////////////////////////////
