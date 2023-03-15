@@ -48,7 +48,9 @@ describe("Algebraic operations", () => {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       const x = BigInt.fromString(testCase.x);
-      const actual = x.pow(<i32>3);
+      let actual = x.pow(<i32>3);
+      actual = x.pow(<i64>3);
+      actual = x.pow(<i16>3);
       const expected = testCase.xCube;
       expect(actual.toString()).toStrictEqual(expected);
     }
