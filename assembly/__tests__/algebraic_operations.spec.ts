@@ -54,6 +54,18 @@ describe("Algebraic operations", () => {
     }
   });
 
+  it("logarithm (base 2)", () => {
+    for (let i = 0; i < testCases.length; i++) {
+      const testCase = testCases[i];
+      if (parseInt(testCase.x) > 0) {
+      const x = BigInt.fromString(testCase.x);
+      const actual = x.log2();
+      const expected = (<u64>Math.log2(parseInt(testCase.x))).toString();
+      expect(actual.toString()).toStrictEqual(expected);
+      }
+    }
+  });
+
   it("squares then square roots", () => {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
