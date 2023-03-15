@@ -815,33 +815,33 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    pow<T>(val: T): BigInt {
-    if (val instanceof BigInt) return this.pow_bigint(val);
+  pow<T>(val: T): BigInt {
+    if (val instanceof BigInt) return this.powBigint(val);
     // @ts-ignore
-    if (val instanceof i8) return this.pow_i8(val);
+    if (val instanceof i8) return this.powInt8(val);
     // @ts-ignore
-    if (val instanceof u8) return this.pow_u8(val);
+    if (val instanceof u8) return this.powUint8(val);
     // @ts-ignore
-    if (val instanceof i16) return this.pow_i16(val);
+    if (val instanceof i16) return this.powInt16(val);
     // @ts-ignore
-    if (val instanceof u16) return this.pow_u16(val);
+    if (val instanceof u16) return this.powUint16(val);
     // @ts-ignore
-    if (val instanceof i32) return this.pow_i32(val);
+    if (val instanceof i32) return this.powInt32(val);
     // @ts-ignore
-    if (val instanceof u32) return this.pow_u32(val);
+    if (val instanceof u32) return this.powUint32(val);
     // @ts-ignore
-    if (val instanceof i64) return this.pow_i64(val);
+    if (val instanceof i64) return this.powInt64(val);
     // @ts-ignore
-    if (val instanceof u64) return this.pow_u64(val);
+    if (val instanceof u64) return this.powUint64(val);
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
-  pow_bigint(k: BigInt): BigInt {
+  powBigint(k: BigInt): BigInt {
     if (k.isNeg) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
-    if (k.lte(u64.MAX_VALUE)) {
-      return this.pow_u64(k.toUInt64());
+    if (k.lte(BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER))) {
+      return this.powUint64(k.toUInt64());
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -853,10 +853,10 @@ export class BigInt {
       /* shift to next bit */
       k = k.rightShift(1);
     }
-    return res
+    return res;
   }
 
-  pow_u32(k: u32): BigInt {
+  powUint32(k: u32): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -873,7 +873,7 @@ export class BigInt {
     return res;
   }
 
-  pow_i8(k: i8): BigInt {
+  powInt8(k: i8): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -890,7 +890,7 @@ export class BigInt {
     return res;
   }
 
-  pow_u8(k: u8): BigInt {
+  powUint8(k: u8): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -907,7 +907,7 @@ export class BigInt {
     return res;
   }
 
-  pow_i16(k: i16): BigInt {
+  powInt16(k: i16): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -924,7 +924,7 @@ export class BigInt {
     return res;
   }
 
-  pow_u16(k: u16): BigInt {
+  powUint16(k: u16): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -941,7 +941,7 @@ export class BigInt {
     return res;
   }
 
-  pow_i32(k: i32): BigInt {
+  powInt32(k: i32): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -958,7 +958,7 @@ export class BigInt {
     return res;
   }
 
-  pow_u64(k: u64): BigInt {
+  powUint64(k: u64): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -975,7 +975,7 @@ export class BigInt {
     return res;
   }
 
-  pow_i64(k: i64): BigInt {
+  powInt64(k: i64): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -1103,24 +1103,26 @@ export class BigInt {
 
   log2(): BigInt {
     if (this.lte(BigInt.ZERO)) {
-      throw new RangeError("Logarithm of non-positive numbers is not supported.");
+      throw new RangeError(
+        "Logarithm of non-positive numbers is not supported"
+      );
     }
     this.trimLeadingZeros();
-    return BigInt.from(this.countBits()-1);
+    return BigInt.from(this.countBits() - 1);
   }
 
   log<T>(base: T): BigInt {
-    if (base instanceof BigInt) return this._log_bigint(base);
+    if (base instanceof BigInt) return this._logBigint(base);
     // @ts-ignore
-    if (isInteger(base) || isFloat(base)) return this._log_number(base);
+    if (isInteger(base) || isFloat(base)) return this._logNumber(base);
     throw new TypeError("Unsupported generic type " + nameof<T>(base));
   }
 
-  private _log_number<T>(base: T): BigInt {
+  private _logNumber<T>(base: T): BigInt {
     return this.log2().div(floor(Math.log2(base)));
   }
 
-  private _log_bigint(base: BigInt): BigInt {
+  private _logBigint(base: BigInt): BigInt {
     return this.log2().div(base.log2());
   }
 
