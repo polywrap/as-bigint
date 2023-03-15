@@ -1103,10 +1103,10 @@ export class BigInt {
 
   log2(): BigInt {
     if (this.lte(BigInt.ZERO)) {
-      throw new RangeError("Logarithm of negative numbers is not supported.");
+      throw new RangeError("Logarithm of non-positive numbers is not supported.");
     }
     this.trimLeadingZeros();
-    return BigInt.from(this.d.length * BigInt.actualBits - clz(this.d[0]));
+    return BigInt.from(this.countBits()-1);
   }
 
   log<T>(base: T): BigInt {
