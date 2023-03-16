@@ -816,32 +816,20 @@ export class BigInt {
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   pow<T>(val: T): BigInt {
-    if (val instanceof BigInt) return this.powBigint(val);
+    if (val instanceof BigInt) return this._powBigint(val);
     // @ts-ignore
-    if (val instanceof i8) return this.powInt8(val);
+    if (val instanceof string) return this._powBigInt(BigInt.from(val));
     // @ts-ignore
-    if (val instanceof u8) return this.powUint8(val);
-    // @ts-ignore
-    if (val instanceof i16) return this.powInt16(val);
-    // @ts-ignore
-    if (val instanceof u16) return this.powUint16(val);
-    // @ts-ignore
-    if (val instanceof i32) return this.powInt32(val);
-    // @ts-ignore
-    if (val instanceof u32) return this.powUint32(val);
-    // @ts-ignore
-    if (val instanceof i64) return this.powInt64(val);
-    // @ts-ignore
-    if (val instanceof u64) return this.powUint64(val);
+    if (isInteger(val)) return this._powInt(val);
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
-  powBigint(k: BigInt): BigInt {
+  private _powBigint(k: BigInt): BigInt {
     if (k.isNeg) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
-    if (k.lte(BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER))) {
-      return this.powUint64(k.toUInt64());
+    if (k.lte(BigInt.fromUInt64(u64.MAX_VALUE))) {
+      return this._powInt(k.toUInt64());
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
@@ -856,126 +844,7 @@ export class BigInt {
     return res;
   }
 
-  powUint32(k: u32): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powInt8(k: i8): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powUint8(k: u8): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powInt16(k: i16): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powUint16(k: u16): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powInt32(k: i32): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powUint64(k: u64): BigInt {
-    if (k < 0) {
-      throw new RangeError("BigInt does not support negative exponentiation");
-    }
-    let temp: BigInt = this.copy();
-    let res: BigInt = BigInt.ONE;
-    while (k > 0) {
-      /* if the bit is set multiply */
-      if ((k & 1) != 0) res = res.mul(temp);
-      /* square */
-      if (k > 1) temp = temp.square();
-      /* shift to next bit */
-      k >>= 1;
-    }
-    return res;
-  }
-
-  powInt64(k: i64): BigInt {
+  private _powInt<T>(k: T): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
