@@ -829,7 +829,7 @@ export class BigInt {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
     if (k.lte(BigInt.fromUInt64(u64.MAX_VALUE))) {
-      return this.powInt(k.toUInt64());
+      return this._powInt(k.toUInt64());
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
