@@ -828,8 +828,8 @@ export class BigInt {
     if (k.isNeg) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
-    if (k.lte(BigInt.fromUInt64(<u64>F64.MAX_SAFE_INTEGER))) {
-      return this.powUint64(k.toUInt64());
+    if (k.lte(BigInt.fromUInt64(u64.MAX_VALUE))) {
+      return this.powInt(k.toUInt64());
     }
     let temp: BigInt = this.copy();
     let res: BigInt = BigInt.ONE;
