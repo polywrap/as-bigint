@@ -843,7 +843,7 @@ export class BigInt {
     }
     return res;
   }
-  
+
   private _powInt<T>(k: T): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
