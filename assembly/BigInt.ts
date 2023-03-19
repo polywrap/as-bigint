@@ -815,7 +815,36 @@ export class BigInt {
 
   // EXPONENTIATION ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  pow(k: i32): BigInt {
+  pow<T>(val: T): BigInt {
+    if (val instanceof BigInt) return this._powBigint(val);
+    // @ts-ignore
+    if (val instanceof string) return this._powBigInt(BigInt.from(val));
+    // @ts-ignore
+    if (isInteger(val)) return this._powInt(val);
+    throw new TypeError("Unsupported generic type " + nameof<T>(val));
+  }
+
+  private _powBigint(k: BigInt): BigInt {
+    if (k.isNeg) {
+      throw new RangeError("BigInt does not support negative exponentiation");
+    }
+    if (k.lte(BigInt.fromUInt64(u64.MAX_VALUE))) {
+      return this._powInt(k.toUInt64());
+    }
+    let temp: BigInt = this.copy();
+    let res: BigInt = BigInt.ONE;
+    while (k.lt(BigInt.ZERO)) {
+      /* if the bit is set multiply */
+      if (k.bitwiseAnd(1).ne(0)) res = res.mul(temp);
+      /* square */
+      if (k.gt(BigInt.ONE)) temp = temp.square();
+      /* shift to next bit */
+      k = k.rightShift(1);
+    }
+    return res;
+  }
+
+  private _powInt<T>(k: T): BigInt {
     if (k < 0) {
       throw new RangeError("BigInt does not support negative exponentiation");
     }
@@ -939,6 +968,31 @@ export class BigInt {
     }
 
     return z;
+  }
+
+  log2(): BigInt {
+    if (this.lte(BigInt.ZERO)) {
+      throw new RangeError(
+        "Logarithm of non-positive numbers is not supported"
+      );
+    }
+    this.trimLeadingZeros();
+    return BigInt.from(this.countBits() - 1);
+  }
+
+  log<T>(base: T): BigInt {
+    if (base instanceof BigInt) return this._logBigint(base);
+    // @ts-ignore
+    if (isInteger(base) || isFloat(base)) return this._logNumber(base);
+    throw new TypeError("Unsupported generic type " + nameof<T>(base));
+  }
+
+  private _logNumber<T>(base: T): BigInt {
+    return this.log2().div(floor(Math.log2(base)));
+  }
+
+  private _logBigint(base: BigInt): BigInt {
+    return this.log2().div(base.log2());
   }
 
   // DIVISION //////////////////////////////////////////////////////////////////////////////////////////////////////////
