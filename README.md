@@ -119,7 +119,7 @@ Division | Implemented | Incomplete
 Remainder | Implemented | Incomplete
 Square root | Implemented | Complete
 Modular reduction | N/A | Not implemented
-Random number generation | N/A | Not implemented
+Random number generation | Unimplementable | Complete
 Cryptographic functions | N/A | Not implemented
 
 Note that operator overloads `<<`, `>>`, and `**` only support right-hand operands that fit in an i32--i.e. between the range (0, 2147483647].
