@@ -46,7 +46,7 @@ export class BigInt {
     const bigintMax: BigInt = BigInt.from(max);
     let neg: bool = false;
     if (bigintMax.eq(0)) return BigInt.fromUInt16(0);
-    else if (bigintMax.isNeg)) {
+    else if (bigintMax.isNeg) {
       neg = true;
       bigintMax.isNeg = false;
     }
