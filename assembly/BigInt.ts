@@ -67,7 +67,7 @@ export class BigInt {
     const random8 = new Uint8Array(digits * 4);
     crypto.getRandomValues(random8);
     const random32 = Uint32Array.wrap(random8.buffer);
-    random32.forEach(function (value: u32, index: i32, s: Uint32Array) {
+    random32.forEach(function (value: u32, i: i32, s: Uint32Array) {
       s[i] &= BigInt.digitMask;
     });
     return BigInt.fromDigits(random32);
