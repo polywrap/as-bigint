@@ -62,6 +62,17 @@ export class BigInt {
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
+  static rand_digits(digits: i32 = BigInt.precision): BigInt {
+    if (digits <= 0) throw new RangeError("Size must be positive");
+    var random_bytes = new Uint8Array(digits*4);
+    crypto.getRandomValues(random_bytes);
+    var random_digits = Uint32Array.wrap(random_bytes.buffer);
+    random_digits.forEach(function (value: u32, index: i32, s: Uint32Array) {
+      s[i] &= BigInt.digitMask;
+    });
+    return BigInt.fromDigits(random_digits);
+  }
+
   static fromString(bigInteger: string, radix: i32 = 10): BigInt {
     if (radix < 2 || radix > 16) {
       throw new RangeError("BigInt only reads strings of radix 2 through 16");
