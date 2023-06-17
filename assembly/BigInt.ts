@@ -43,14 +43,14 @@ export class BigInt {
   }
 
   static randomMax<T>(max: T): BigInt {
-    let bigintMax: BigInt = BigInt.from(max);
+    const bigintMax: BigInt = BigInt.from(max);
     let neg: bool = false;
     if (bigintMax.eq(0)) return BigInt.fromUInt16(0);
     else if (bigintMax.lt(0)) {
       neg = true;
       bigintMax.isNeg = false;
     }
-    let res: BigInt = randomDigits(bigintMax.log2()/5+2);
+    let res: BigInt = randomDigits(bigintMax.log2() / 5 + 2);
     res = res.mod(bigintMax);
     if (neg) res.isNeg = true;
     return res;
