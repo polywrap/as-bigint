@@ -31,6 +31,31 @@ export class BigInt {
     this.isNeg = isNegative;
   }
 
+  static randomDigits(digits: i32 = BigInt.precision): BigInt {
+    if (digits <= 0) throw new RangeError("Size must be positive");
+    const random8 = new Uint8Array(digits * 4);
+    crypto.getRandomValues(random8);
+    const random32 = Uint32Array.wrap(random8.buffer);
+    random32.forEach(function (value: u32, i: i32, s: Uint32Array) {
+      s[i] &= BigInt.digitMask;
+    });
+    return BigInt.fromDigits(random32);
+  }
+
+  static randomMax<T>(max: T): BigInt {
+    let bigintMax: BigInt = BigInt.from(max);
+    let neg: bool = false;
+    if (bigintMax.eq(0)) return BigInt.fromUInt16(0);
+    else if (bigintMax.lt(0)) {
+      neg = true;
+      bigintMax.isNeg = false;
+    }
+    let res: BigInt = randomDigits(bigintMax.log2()/5+2);
+    res = res.mod(bigintMax);
+    if (neg) res.isNeg = true;
+    return res;
+  }
+
   // generic constructor based on https://github.com/ttulka/as-big/blob/main/assembly/Big.ts#L84
   /**
    * Returns a new {BigInt} instance from generic type {T}.
@@ -60,17 +85,6 @@ export class BigInt {
     if (val instanceof u64) return BigInt.fromUInt64(val);
 
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
-  }
-
-  static randomDigits(digits: i32 = BigInt.precision): BigInt {
-    if (digits <= 0) throw new RangeError("Size must be positive");
-    const random8 = new Uint8Array(digits * 4);
-    crypto.getRandomValues(random8);
-    const random32 = Uint32Array.wrap(random8.buffer);
-    random32.forEach(function (value: u32, i: i32, s: Uint32Array) {
-      s[i] &= BigInt.digitMask;
-    });
-    return BigInt.fromDigits(random32);
   }
 
   static fromString(bigInteger: string, radix: i32 = 10): BigInt {
