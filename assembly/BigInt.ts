@@ -64,9 +64,9 @@ export class BigInt {
 
   static randomDigits(digits: i32 = BigInt.precision): BigInt {
     if (digits <= 0) throw new RangeError("Size must be positive");
-    let random8 = new Uint8Array(digits * 4);
-    crypto.getRandomValues(random_bytes);
-    let random32 = Uint32Array.wrap(random_bytes.buffer);
+    const random8 = new Uint8Array(digits * 4);
+    crypto.getRandomValues(random8);
+    const random32 = Uint32Array.wrap(random8.buffer);
     random32.forEach(function (value: u32, index: i32, s: Uint32Array) {
       s[i] &= BigInt.digitMask;
     });
