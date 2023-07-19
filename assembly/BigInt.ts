@@ -1681,7 +1681,7 @@ export class BigInt {
   }
 
   @operator("/")
-  static divOp(left: BigInt, right: BigInt): BigInt {
+  private static divOp(left: BigInt, right: BigInt): BigInt {
     return left.div(right);
   }
 
